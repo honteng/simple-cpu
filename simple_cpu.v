@@ -28,14 +28,11 @@ module simple_cpu (
     wire [31:0] memory_read_data;
     wire [31:0] write_back_data;
 
-    wire is_r_type;
-    wire is_addi;
-    wire is_lw;
-    wire is_sw;
-    wire is_beq;
-
-    wire write_enable;
+    wire reg_write;
     wire mem_write;
+    wire alu_src_imm;
+    wire mem_to_reg;
+    wire branch;
 
     wire registers_equal;
     wire branch_taken;
@@ -68,36 +65,19 @@ module simple_cpu (
         .imm_b(imm_b)
     );
 
-    assign is_r_type =
-        opcode == 7'b0110011;
-
-    assign is_addi =
-        opcode == 7'b0010011 &&
-        funct3 == 3'b000;
-
-    assign is_lw =
-        opcode == 7'b0000011 &&
-        funct3 == 3'b010;
-
-    assign is_sw =
-        opcode == 7'b0100011 &&
-        funct3 == 3'b010;
-
-    assign is_beq =
-        opcode == 7'b1100011 &&
-        funct3 == 3'b000;
-
-    assign write_enable =
-        is_r_type ||
-        is_addi ||
-        is_lw;
-
-    assign mem_write =
-        is_sw;
+    control_unit control (
+        .opcode(opcode),
+        .funct3(funct3),
+        .reg_write(reg_write),
+        .mem_write(mem_write),
+        .alu_src_imm(alu_src_imm),
+        .mem_to_reg(mem_to_reg),
+        .branch(branch)
+    );
 
     register_file rf (
         .clk(clk),
-        .write_enable(write_enable),
+        .write_enable(reg_write),
         .read_addr1(rs1),
         .read_addr2(rs2),
         .write_addr(rd),
@@ -107,12 +87,15 @@ module simple_cpu (
     );
 
     assign alu_input_b =
-        is_sw   ? imm_s :
-        is_addi ? imm_i :
-        is_lw   ? imm_i :
-                  read_data2;
+        alu_src_imm
+            ? (
+                opcode == 7'b0100011
+                    ? imm_s
+                    : imm_i
+              )
+            : read_data2;
 
-    alu_control control (
+    alu_control alu_ctl (
         .opcode(opcode),
         .funct3(funct3),
         .funct7(funct7),
@@ -135,17 +118,15 @@ module simple_cpu (
     );
 
     assign write_back_data =
-        is_lw ? memory_read_data : alu_result;
-
-    //
-    // Branch logic
-    //
+        mem_to_reg
+            ? memory_read_data
+            : alu_result;
 
     assign registers_equal =
         read_data1 == read_data2;
 
     assign branch_taken =
-        is_beq && registers_equal;
+        branch && registers_equal;
 
     assign pc_plus_4 =
         pc + 32'd4;
