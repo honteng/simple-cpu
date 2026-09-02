@@ -1,0 +1,49 @@
+$date
+	Sun Aug 30 15:29:53 2026
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module instruction_decoder_tb $end
+$var wire 5 ! rs2 [4:0] $end
+$var wire 5 " rs1 [4:0] $end
+$var wire 5 # rd [4:0] $end
+$var wire 7 $ opcode [6:0] $end
+$var wire 7 % funct7 [6:0] $end
+$var wire 3 & funct3 [2:0] $end
+$var reg 32 ' instruction [31:0] $end
+$scope module decoder $end
+$var wire 32 ( instruction [31:0] $end
+$var wire 5 ) rs2 [4:0] $end
+$var wire 5 * rs1 [4:0] $end
+$var wire 5 + rd [4:0] $end
+$var wire 7 , opcode [6:0] $end
+$var wire 7 - funct7 [6:0] $end
+$var wire 3 . funct3 [2:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+$end
+#0
+$dumpvars
+b0 .
+b0 -
+b110011 ,
+b11 +
+b1 *
+b10 )
+b1000001000000110110011 (
+b1000001000000110110011 '
+b0 &
+b0 %
+b110011 $
+b11 #
+b1 "
+b10 !
+$end
+#1000

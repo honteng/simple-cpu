@@ -1,0 +1,105 @@
+$date
+	Sun Aug 30 16:33:11 2026
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module cpu_core_tb $end
+$var reg 1 ! clk $end
+$var reg 1 " reset $end
+$scope module cpu $end
+$var wire 1 ! clk $end
+$var wire 1 " reset $end
+$var wire 5 # rs2 [4:0] $end
+$var wire 5 $ rs1 [4:0] $end
+$var wire 32 % read_data2 [31:0] $end
+$var wire 32 & read_data1 [31:0] $end
+$var wire 5 ' rd [4:0] $end
+$var wire 7 ( opcode [6:0] $end
+$var wire 7 ) funct7 [6:0] $end
+$var wire 3 * funct3 [2:0] $end
+$var wire 32 + alu_result [31:0] $end
+$var reg 32 , instruction [31:0] $end
+$var reg 1 - write_enable $end
+$scope module alu0 $end
+$var wire 3 . op [2:0] $end
+$var wire 1 / zero $end
+$var wire 32 0 b [31:0] $end
+$var wire 32 1 a [31:0] $end
+$var parameter 3 2 ALU_ADD $end
+$var parameter 3 3 ALU_AND $end
+$var parameter 3 4 ALU_OR $end
+$var parameter 3 5 ALU_SUB $end
+$var parameter 3 6 ALU_XOR $end
+$var reg 32 7 result [31:0] $end
+$upscope $end
+$scope module decoder $end
+$var wire 32 8 instruction [31:0] $end
+$var wire 5 9 rs2 [4:0] $end
+$var wire 5 : rs1 [4:0] $end
+$var wire 5 ; rd [4:0] $end
+$var wire 7 < opcode [6:0] $end
+$var wire 7 = funct7 [6:0] $end
+$var wire 3 > funct3 [2:0] $end
+$upscope $end
+$scope module rf $end
+$var wire 1 ! clk $end
+$var wire 5 ? read_addr1 [4:0] $end
+$var wire 5 @ read_addr2 [4:0] $end
+$var wire 5 A write_addr [4:0] $end
+$var wire 32 B write_data [31:0] $end
+$var wire 1 - write_enable $end
+$var wire 32 C read_data2 [31:0] $end
+$var wire 32 D read_data1 [31:0] $end
+$upscope $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+b100 6
+b1 5
+b11 4
+b10 3
+b0 2
+$end
+#0
+$dumpvars
+b1010 D
+b10100 C
+b11110 B
+b11 A
+b10 @
+b1 ?
+b0 >
+b0 =
+b110011 <
+b11 ;
+b1 :
+b10 9
+b1000001000000110110011 8
+b11110 7
+b1010 1
+b10100 0
+0/
+b0 .
+1-
+b1000001000000110110011 ,
+b11110 +
+b0 *
+b0 )
+b110011 (
+b11 '
+b1010 &
+b10100 %
+b1 $
+b10 #
+0"
+0!
+$end
+#5000
+1!
+#7000

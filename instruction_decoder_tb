@@ -1,0 +1,67 @@
+#! /opt/homebrew/Cellar/icarus-verilog/13.0/bin/vvp
+:ivl_version "13.0 (stable)" "(v13_0)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision - 12;
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/13.0/lib/ivl/system.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/13.0/lib/ivl/vhdl_sys.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/13.0/lib/ivl/vhdl_textio.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/13.0/lib/ivl/v2005_math.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/13.0/lib/ivl/va_math.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/13.0/lib/ivl/v2009.vpi";
+S_0x1052d6d90 .scope package, "$unit" "$unit" 2 1;
+ .timescale 0 0;
+S_0x1052d41c0 .scope module, "instruction_decoder_tb" "instruction_decoder_tb" 3 3;
+ .timescale -9 -12;
+v0x1052dc4b0_0 .net "funct3", 2 0, L_0x1052dc910;  1 drivers
+v0x1052dc550_0 .net "funct7", 6 0, L_0x1052dcaf0;  1 drivers
+v0x1052dc5f0_0 .var "instruction", 31 0;
+v0x1052dc690_0 .net "opcode", 6 0, L_0x1052dc7d0;  1 drivers
+v0x1052dc730_0 .net "rd", 4 0, L_0x1052dc870;  1 drivers
+v0x763064000_0 .net "rs1", 4 0, L_0x1052dc9b0;  1 drivers
+v0x7630640a0_0 .net "rs2", 4 0, L_0x1052dca50;  1 drivers
+S_0x1052d4340 .scope module, "decoder" "instruction_decoder" 3 14, 4 1 0, S_0x1052d41c0;
+ .timescale 0 0;
+    .port_info 0 /INPUT 32 "instruction";
+    .port_info 1 /OUTPUT 7 "opcode";
+    .port_info 2 /OUTPUT 5 "rd";
+    .port_info 3 /OUTPUT 5 "rs1";
+    .port_info 4 /OUTPUT 5 "rs2";
+    .port_info 5 /OUTPUT 3 "funct3";
+    .port_info 6 /OUTPUT 7 "funct7";
+v0x1052dbb90_0 .net "funct3", 2 0, L_0x1052dc910;  alias, 1 drivers
+v0x1052dbc30_0 .net "funct7", 6 0, L_0x1052dcaf0;  alias, 1 drivers
+v0x1052dc190_0 .net "instruction", 31 0, v0x1052dc5f0_0;  1 drivers
+v0x1052dc230_0 .net "opcode", 6 0, L_0x1052dc7d0;  alias, 1 drivers
+v0x1052dc2d0_0 .net "rd", 4 0, L_0x1052dc870;  alias, 1 drivers
+v0x1052dc370_0 .net "rs1", 4 0, L_0x1052dc9b0;  alias, 1 drivers
+v0x1052dc410_0 .net "rs2", 4 0, L_0x1052dca50;  alias, 1 drivers
+L_0x1052dc7d0 .part v0x1052dc5f0_0, 0, 7;
+L_0x1052dc870 .part v0x1052dc5f0_0, 7, 5;
+L_0x1052dc910 .part v0x1052dc5f0_0, 12, 3;
+L_0x1052dc9b0 .part v0x1052dc5f0_0, 15, 5;
+L_0x1052dca50 .part v0x1052dc5f0_0, 20, 5;
+L_0x1052dcaf0 .part v0x1052dc5f0_0, 25, 7;
+    .scope S_0x1052d41c0;
+T_0 ;
+    %vpi_call/w 3 25 "$dumpfile", "instruction_decoder.vcd" {0 0 0};
+    %vpi_call/w 3 26 "$dumpvars", 32'sb00000000000000000000000000000000, S_0x1052d41c0 {0 0 0};
+    %pushi/vec4 2130355, 0, 32;
+    %store/vec4 v0x1052dc5f0_0, 0, 32;
+    %delay 1000, 0;
+    %vpi_call/w 3 33 "$display", "instruction = %h", v0x1052dc5f0_0 {0 0 0};
+    %vpi_call/w 3 34 "$display", "opcode      = %b", v0x1052dc690_0 {0 0 0};
+    %vpi_call/w 3 35 "$display", "rd          = %d", v0x1052dc730_0 {0 0 0};
+    %vpi_call/w 3 36 "$display", "rs1         = %d", v0x763064000_0 {0 0 0};
+    %vpi_call/w 3 37 "$display", "rs2         = %d", v0x7630640a0_0 {0 0 0};
+    %vpi_call/w 3 38 "$display", "funct3      = %b", v0x1052dc4b0_0 {0 0 0};
+    %vpi_call/w 3 39 "$display", "funct7      = %b", v0x1052dc550_0 {0 0 0};
+    %vpi_call/w 3 41 "$finish" {0 0 0};
+    %end;
+    .thread T_0;
+# The file index is used to find the file name in the following table.
+:file_names 5;
+    "N/A";
+    "<interactive>";
+    "-";
+    "instruction_decoder_tb.v";
+    "instruction_decoder.v";

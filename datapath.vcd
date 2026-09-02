@@ -1,0 +1,127 @@
+$date
+	Sun Aug 30 15:09:57 2026
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module datapath_tb $end
+$var wire 32 ! read_data2 [31:0] $end
+$var wire 32 " read_data1 [31:0] $end
+$var wire 32 # alu_result [31:0] $end
+$var reg 3 $ alu_op [2:0] $end
+$var reg 1 % clk $end
+$var reg 5 & read_addr1 [4:0] $end
+$var reg 5 ' read_addr2 [4:0] $end
+$var reg 5 ( write_addr [4:0] $end
+$var reg 32 ) write_data [31:0] $end
+$var reg 1 * write_enable $end
+$scope module alu0 $end
+$var wire 3 + op [2:0] $end
+$var wire 1 , zero $end
+$var wire 32 - b [31:0] $end
+$var wire 32 . a [31:0] $end
+$var parameter 3 / ALU_ADD $end
+$var parameter 3 0 ALU_AND $end
+$var parameter 3 1 ALU_OR $end
+$var parameter 3 2 ALU_SUB $end
+$var parameter 3 3 ALU_XOR $end
+$var reg 32 4 result [31:0] $end
+$upscope $end
+$scope module rf $end
+$var wire 1 % clk $end
+$var wire 5 5 read_addr1 [4:0] $end
+$var wire 5 6 read_addr2 [4:0] $end
+$var wire 5 7 write_addr [4:0] $end
+$var wire 32 8 write_data [31:0] $end
+$var wire 1 * write_enable $end
+$var wire 32 9 read_data2 [31:0] $end
+$var wire 32 : read_data1 [31:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+b100 3
+b1 2
+b11 1
+b10 0
+b0 /
+$end
+#0
+$dumpvars
+b0 :
+b0 9
+b0 8
+b0 7
+b0 6
+b0 5
+b0 4
+b0 .
+b0 -
+1,
+b0 +
+0*
+b0 )
+b0 (
+b0 '
+b0 &
+0%
+b0 $
+b0 #
+b0 "
+b0 !
+$end
+#2000
+b1010 )
+b1010 8
+b1 (
+b1 7
+1*
+#5000
+1%
+#10000
+0%
+b10100 )
+b10100 8
+b10 (
+b10 7
+#15000
+1%
+#20000
+0,
+b11110 #
+b11110 4
+b10100 !
+b10100 -
+b10100 9
+b1010 "
+b1010 .
+b1010 :
+0%
+b10 '
+b10 6
+b1 &
+b1 5
+0*
+#21000
+b11110 )
+b11110 8
+b11 (
+b11 7
+1*
+#25000
+1%
+#30000
+b110010 #
+b110010 4
+b11110 "
+b11110 .
+b11110 :
+0%
+b11 &
+b11 5
+0*
+#31000
