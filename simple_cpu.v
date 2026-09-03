@@ -17,6 +17,7 @@ module simple_cpu (
     wire [31:0] imm_i;
     wire [31:0] imm_s;
     wire [31:0] imm_b;
+    wire [31:0] imm_j;
 
     wire [31:0] read_data1;
     wire [31:0] read_data2;
@@ -27,12 +28,14 @@ module simple_cpu (
 
     wire [31:0] memory_read_data;
     wire [31:0] write_back_data;
+    wire [31:0] jump_target;
 
     wire reg_write;
     wire mem_write;
     wire alu_src_imm;
     wire mem_to_reg;
     wire branch;
+    wire jump;
 
     wire registers_equal;
     wire branch_taken;
@@ -62,7 +65,8 @@ module simple_cpu (
         .funct7(funct7),
         .imm_i(imm_i),
         .imm_s(imm_s),
-        .imm_b(imm_b)
+        .imm_b(imm_b),
+	.imm_j(imm_j)
     );
 
     control_unit control (
@@ -72,7 +76,8 @@ module simple_cpu (
         .mem_write(mem_write),
         .alu_src_imm(alu_src_imm),
         .mem_to_reg(mem_to_reg),
-        .branch(branch)
+        .branch(branch),
+	.jump(jump)
     );
 
     register_file rf (
@@ -118,9 +123,11 @@ module simple_cpu (
     );
 
     assign write_back_data =
-        mem_to_reg
-            ? memory_read_data
-            : alu_result;
+        jump
+            ? pc_plus_4
+            : mem_to_reg
+                ? memory_read_data
+                : alu_result;
 
     assign registers_equal =
         read_data1 == read_data2;
@@ -134,9 +141,13 @@ module simple_cpu (
     assign branch_target =
         pc + imm_b;
 
+    assign jump_target = pc + imm_j;
+
     assign next_pc =
-        branch_taken
-            ? branch_target
-            : pc_plus_4;
+        jump
+            ? jump_target
+            : branch_taken
+                ? branch_target
+                : pc_plus_4;
 
 endmodule

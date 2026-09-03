@@ -6,7 +6,8 @@ module control_unit (
     output reg mem_write,
     output reg alu_src_imm,
     output reg mem_to_reg,
-    output reg branch
+    output reg branch,
+    output reg jump
 );
 
     always @(*) begin
@@ -15,6 +16,7 @@ module control_unit (
         alu_src_imm = 0;
         mem_to_reg  = 0;
         branch      = 0;
+        jump	    = 0;
 
         case (opcode)
 
@@ -53,6 +55,10 @@ module control_unit (
                 end
             end
 
+            7'b1101111: begin
+                reg_write = 1;
+                jump = 1;
+            end
         endcase
     end
 

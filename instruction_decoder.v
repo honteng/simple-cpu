@@ -10,7 +10,8 @@ module instruction_decoder (
 
     output wire [31:0] imm_i,
     output wire [31:0] imm_s,
-    output wire [31:0] imm_b
+    output wire [31:0] imm_b,
+    output wire [31:0] imm_j
 );
 
     assign opcode = instruction[6:0];
@@ -39,5 +40,13 @@ module instruction_decoder (
          instruction[30:25],
          instruction[11:8],
          1'b0};
+
+    assign imm_j =
+         {{11{instruction[31]}},
+          instruction[31],
+          instruction[19:12],
+          instruction[20],
+          instruction[30:21],
+          1'b0};
 
 endmodule

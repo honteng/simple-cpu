@@ -24,14 +24,10 @@ module simple_cpu_tb;
 
         #50;
 
-        $display("x1 = %d",
-            cpu.rf.registers[1]);
-
-        $display("x2 = %d",
-            cpu.rf.registers[2]);
-
-        $display("x3 = %d",
-            cpu.rf.registers[3]);
+        $display("x1 = %d", cpu.rf.registers[1]);
+        $display("x2 = %d", cpu.rf.registers[2]);
+        $display("x3 = %d", cpu.rf.registers[3]);
+        $display("x5 = %d", cpu.rf.registers[5]);
 
         $finish;
     end
