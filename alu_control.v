@@ -36,6 +36,9 @@ module alu_control (
 			// SW
 			7'b0100011: alu_op = 3'b000; // ADD for address calculation
 
+			// JALR
+			7'b1100111: alu_op = 3'b000; // ADD for target calculation
+
 			default: begin
 				alu_op = 3'b000; // default: ADD
 			end

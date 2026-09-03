@@ -22,12 +22,19 @@ module simple_cpu_tb;
         #6;
         reset = 0;
 
-        #50;
+        #60;
 
         $display("x1 = %d", cpu.rf.registers[1]);
         $display("x2 = %d", cpu.rf.registers[2]);
         $display("x3 = %d", cpu.rf.registers[3]);
+        $display("x4 = %d", cpu.rf.registers[4]);
         $display("x5 = %d", cpu.rf.registers[5]);
+
+        if (cpu.rf.registers[1] !== 32'd17) $fatal(1, "x1 mismatch");
+        if (cpu.rf.registers[2] !== 32'd0)  $fatal(1, "x2 should be skipped");
+        if (cpu.rf.registers[3] !== 32'd0)  $fatal(1, "x3 should be skipped");
+        if (cpu.rf.registers[4] !== 32'd42) $fatal(1, "x4 mismatch");
+        if (cpu.rf.registers[5] !== 32'd8)  $fatal(1, "x5 should hold return address");
 
         $finish;
     end

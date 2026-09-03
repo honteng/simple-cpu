@@ -29,6 +29,7 @@ module simple_cpu (
     wire [31:0] memory_read_data;
     wire [31:0] write_back_data;
     wire [31:0] jump_target;
+    wire [31:0] jalr_target;
 
     wire reg_write;
     wire mem_write;
@@ -36,6 +37,7 @@ module simple_cpu (
     wire mem_to_reg;
     wire branch;
     wire jump;
+    wire jalr;
 
     wire registers_equal;
     wire branch_taken;
@@ -77,7 +79,8 @@ module simple_cpu (
         .alu_src_imm(alu_src_imm),
         .mem_to_reg(mem_to_reg),
         .branch(branch),
-	.jump(jump)
+        .jump(jump),
+        .jalr(jalr)
     );
 
     register_file rf (
@@ -123,7 +126,7 @@ module simple_cpu (
     );
 
     assign write_back_data =
-        jump
+        (jump || jalr)
             ? pc_plus_4
             : mem_to_reg
                 ? memory_read_data
@@ -142,10 +145,13 @@ module simple_cpu (
         pc + imm_b;
 
     assign jump_target = pc + imm_j;
+    assign jalr_target = {alu_result[31:1], 1'b0};
 
     assign next_pc =
         jump
             ? jump_target
+            : jalr
+                ? jalr_target
             : branch_taken
                 ? branch_target
                 : pc_plus_4;
