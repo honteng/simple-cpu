@@ -8,7 +8,7 @@ module control_unit (
     output reg mem_to_reg,
     output reg branch,
     output reg jump,
-    output reg jalr
+    output reg jump_reg
 );
 
     always @(*) begin
@@ -18,7 +18,7 @@ module control_unit (
         mem_to_reg  = 0;
         branch      = 0;
         jump        = 0;
-        jalr        = 0;
+        jump_reg    = 0;
 
         case (opcode)
 
@@ -62,7 +62,7 @@ module control_unit (
                 if (funct3 == 3'b000) begin
                     reg_write   = 1;
                     alu_src_imm = 1;
-                    jalr        = 1;
+                    jump_reg    = 1;
                 end
             end
 
