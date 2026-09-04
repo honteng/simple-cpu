@@ -1,0 +1,4 @@
+*.vcd
+*.fst
+*_tb
+*_test

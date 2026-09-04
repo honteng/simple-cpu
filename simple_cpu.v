@@ -19,6 +19,7 @@ module simple_cpu (
     wire [31:0] imm_b;
     wire [31:0] imm_u;
     wire [31:0] imm_j;
+    reg [31:0] immediate;
 
     wire [31:0] read_data1;
     wire [31:0] read_data2;
@@ -28,7 +29,7 @@ module simple_cpu (
     wire [2:0] alu_op;
 
     wire [31:0] memory_read_data;
-    wire [31:0] write_back_data;
+    reg [31:0] write_back_data;
     wire [31:0] auipc_result;
     wire [31:0] jump_target;
     wire [31:0] jalr_target;
@@ -36,12 +37,11 @@ module simple_cpu (
     wire reg_write;
     wire mem_write;
     wire alu_src_imm;
-    wire mem_to_reg;
+    wire [2:0] imm_sel;
+    wire [2:0] wb_sel;
     wire branch;
     wire jump;
     wire jump_reg;
-    wire use_lui;
-    wire use_auipc;
     wire [2:0] branch_type;
 
     wire registers_equal;
@@ -56,6 +56,18 @@ module simple_cpu (
     localparam BR_NE   = 3'b010;
     localparam BR_LT   = 3'b011;
     localparam BR_GE   = 3'b100;
+
+    localparam WB_ALU   = 3'b000;
+    localparam WB_MEM   = 3'b001;
+    localparam WB_PC4   = 3'b010;
+    localparam WB_IMM_U = 3'b011;
+    localparam WB_AUIPC = 3'b100;
+
+    localparam IMM_I = 3'b000;
+    localparam IMM_S = 3'b001;
+    localparam IMM_B = 3'b010;
+    localparam IMM_U = 3'b011;
+    localparam IMM_J = 3'b100;
 
     program_counter pc0 (
         .clk(clk),
@@ -90,12 +102,11 @@ module simple_cpu (
         .reg_write(reg_write),
         .mem_write(mem_write),
         .alu_src_imm(alu_src_imm),
-        .mem_to_reg(mem_to_reg),
+        .imm_sel(imm_sel),
+        .wb_sel(wb_sel),
         .branch(branch),
         .jump(jump),
         .jump_reg(jump_reg),
-        .use_lui(use_lui),
-        .use_auipc(use_auipc),
         .branch_type(branch_type)
     );
 
@@ -112,11 +123,7 @@ module simple_cpu (
 
     assign alu_input_b =
         alu_src_imm
-            ? (
-                opcode == 7'b0100011
-                    ? imm_s
-                    : imm_i
-              )
+            ? immediate
             : read_data2;
 
     alu_control alu_ctl (
@@ -141,19 +148,28 @@ module simple_cpu (
         .read_data(memory_read_data)
     );
 
-    assign auipc_result =
-        pc + imm_u;
+    always @(*) begin
+        case (imm_sel)
+            IMM_S:   immediate = imm_s;
+            IMM_B:   immediate = imm_b;
+            IMM_U:   immediate = imm_u;
+            IMM_J:   immediate = imm_j;
+            default: immediate = imm_i;
+        endcase
+    end
 
-    assign write_back_data =
-        use_lui
-            ? imm_u
-            : use_auipc
-                ? auipc_result
-                : (jump || jump_reg)
-                    ? pc_plus_4
-                    : mem_to_reg
-                        ? memory_read_data
-                        : alu_result;
+    assign auipc_result =
+        pc + immediate;
+
+    always @(*) begin
+        case (wb_sel)
+            WB_MEM:   write_back_data = memory_read_data;
+            WB_PC4:   write_back_data = pc_plus_4;
+            WB_IMM_U: write_back_data = immediate;
+            WB_AUIPC: write_back_data = auipc_result;
+            default:  write_back_data = alu_result;
+        endcase
+    end
 
     assign registers_equal =
         read_data1 == read_data2;
@@ -172,9 +188,9 @@ module simple_cpu (
         pc + 32'd4;
 
     assign branch_target =
-        pc + imm_b;
+        pc + immediate;
 
-    assign jump_target = pc + imm_j;
+    assign jump_target = pc + immediate;
     assign jalr_target = {alu_result[31:1], 1'b0};
 
     assign next_pc =
