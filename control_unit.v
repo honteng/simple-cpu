@@ -10,8 +10,15 @@ module control_unit (
     output reg jump,
     output reg jump_reg,
     output reg use_lui,
-    output reg use_auipc
+    output reg use_auipc,
+    output reg [2:0] branch_type
 );
+
+    localparam BR_NONE = 3'b000;
+    localparam BR_EQ   = 3'b001;
+    localparam BR_NE   = 3'b010;
+    localparam BR_LT   = 3'b011;
+    localparam BR_GE   = 3'b100;
 
     always @(*) begin
         reg_write   = 0;
@@ -23,6 +30,7 @@ module control_unit (
         jump_reg    = 0;
         use_lui     = 0;
         use_auipc   = 0;
+        branch_type = BR_NONE;
 
         case (opcode)
 
@@ -66,11 +74,17 @@ module control_unit (
                 end
             end
 
-            // BEQ
+            // Branches
             7'b1100011: begin
-                if (funct3 == 3'b000) begin
-                    branch = 1;
-                end
+                case (funct3)
+                    3'b000: begin
+                        branch_type = BR_EQ; // BEQ
+                        branch = 1;
+                    end
+                    3'b001: branch_type = BR_NE; // BNE
+                    3'b100: branch_type = BR_LT; // BLT
+                    3'b101: branch_type = BR_GE; // BGE
+                endcase
             end
 
             // JALR

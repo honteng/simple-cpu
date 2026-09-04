@@ -42,12 +42,20 @@ module simple_cpu (
     wire jump_reg;
     wire use_lui;
     wire use_auipc;
+    wire [2:0] branch_type;
 
     wire registers_equal;
+    wire branch_condition;
     wire branch_taken;
 
     wire [31:0] pc_plus_4;
     wire [31:0] branch_target;
+
+    localparam BR_NONE = 3'b000;
+    localparam BR_EQ   = 3'b001;
+    localparam BR_NE   = 3'b010;
+    localparam BR_LT   = 3'b011;
+    localparam BR_GE   = 3'b100;
 
     program_counter pc0 (
         .clk(clk),
@@ -87,7 +95,8 @@ module simple_cpu (
         .jump(jump),
         .jump_reg(jump_reg),
         .use_lui(use_lui),
-        .use_auipc(use_auipc)
+        .use_auipc(use_auipc),
+        .branch_type(branch_type)
     );
 
     register_file rf (
@@ -149,8 +158,15 @@ module simple_cpu (
     assign registers_equal =
         read_data1 == read_data2;
 
+    assign branch_condition =
+        (branch_type == BR_EQ) ? (read_data1 == read_data2) :
+        (branch_type == BR_NE) ? (read_data1 != read_data2) :
+        (branch_type == BR_LT) ? ($signed(read_data1) < $signed(read_data2)) :
+        (branch_type == BR_GE) ? ($signed(read_data1) >= $signed(read_data2)) :
+                                 1'b0;
+
     assign branch_taken =
-        branch && registers_equal;
+        branch_condition;
 
     assign pc_plus_4 =
         pc + 32'd4;

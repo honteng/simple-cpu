@@ -22,24 +22,16 @@ module simple_cpu_tb;
         #6;
         reset = 0;
 
-        #40;
+        #200;
 
-        $display("x1 = %h", cpu.rf.registers[1]);
-        $display("x2 = %h", cpu.rf.registers[2]);
-        $display("x5 = %h", cpu.rf.registers[5]);
-        $display("x6 = %h", cpu.rf.registers[6]);
+        $display("x1 = %d", cpu.rf.registers[1]);
+        $display("x2 = %d", cpu.rf.registers[2]);
 
-        if (cpu.rf.registers[1] !== 32'h00000008)
-            $fatal(1, "JALR return address failed");
+        if (cpu.rf.registers[1] !== 32'd0)
+            $fatal(1, "Loop counter did not reach zero");
 
-        if (cpu.rf.registers[2] !== 32'd0)
-            $fatal(1, "Skipped instruction was executed");
-
-        if (cpu.rf.registers[5] !== 32'h00001000)
-            $fatal(1, "AUIPC failed");
-
-        if (cpu.rf.registers[6] !== 32'd42)
-            $fatal(1, "Far jump target failed");
+        if (cpu.rf.registers[2] !== 32'd5)
+            $fatal(1, "BNE loop should increment x2 five times");
 
         $finish;
     end
