@@ -45,7 +45,7 @@ module simple_cpu (
     wire [2:0] branch_type;
 
     wire registers_equal;
-    wire branch_condition;
+    reg branch_condition;
     wire branch_taken;
 
     wire [31:0] pc_plus_4;
@@ -174,15 +174,23 @@ module simple_cpu (
     assign registers_equal =
         read_data1 == read_data2;
 
-    assign branch_condition =
-        (branch_type == BR_EQ) ? (read_data1 == read_data2) :
-        (branch_type == BR_NE) ? (read_data1 != read_data2) :
-        (branch_type == BR_LT) ? ($signed(read_data1) < $signed(read_data2)) :
-        (branch_type == BR_GE) ? ($signed(read_data1) >= $signed(read_data2)) :
-                                 1'b0;
+    always @(*) begin
+        case (branch_type)
+            BR_EQ:
+                branch_condition = read_data1 == read_data2;
+            BR_NE:
+                branch_condition = read_data1 != read_data2;
+            BR_LT:
+                branch_condition = $signed(read_data1) < $signed(read_data2);
+            BR_GE:
+                branch_condition = $signed(read_data1) >= $signed(read_data2);
+            default:
+                branch_condition = 0;
+        endcase
+    end
 
     assign branch_taken =
-        branch_condition;
+        branch && branch_condition;
 
     assign pc_plus_4 =
         pc + 32'd4;
