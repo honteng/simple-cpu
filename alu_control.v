@@ -29,8 +29,15 @@ module alu_control (
 				endcase
 			end
 
-			// ADDI
-			7'b0010011: alu_op = 3'b000; // ADDI
+			// I-type ALU instructions
+			7'b0010011: begin
+				case (funct3)
+					3'b000: alu_op = 3'b000; // ADDI
+					3'b010: alu_op = 3'b101; // SLTI
+					3'b011: alu_op = 3'b110; // SLTIU
+					default: alu_op = 3'b000;
+				endcase
+			end
 
 			// LW
 			7'b0000011: alu_op = 3'b000; // ADD for address calculation

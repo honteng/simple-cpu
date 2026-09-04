@@ -39,7 +39,7 @@ module control_unit (
                 reg_write = 1;
             end
 
-            // ADDI
+            // I-type ALU instructions: ADDI, SLTI, SLTIU
             7'b0010011: begin
                 reg_write   = 1;
                 alu_src_imm = 1;

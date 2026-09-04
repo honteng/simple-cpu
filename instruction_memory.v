@@ -7,24 +7,17 @@ module instruction_memory (
 
 
     initial begin
-        // addi x1, x0, 5
-        memory[0] = 32'h00500093;
+        // addi x1, x0, -1
+        memory[0] = 32'hfff00093;
 
-        // addi x2, x0, 0
-        memory[1] = 32'h00000113;
+        // slti x2, x1, 1
+        memory[1] = 32'h0010a113;
 
-        // loop: addi x2, x2, 1
-        memory[2] = 32'h00110113;
-
-        // addi x1, x1, -1
-        memory[3] = 32'hfff08093;
-
-        // bne x1, x0, loop
-        // PC = 16 returns to PC = 8, so offset = -8.
-        memory[4] = 32'hfe009ce3;
+        // sltiu x3, x1, 1
+        memory[2] = 32'h0010b193;
 
         // nop
-        memory[5] = 32'h00000013;
+        memory[3] = 32'h00000013;
     end
 
     assign instruction =

@@ -22,16 +22,20 @@ module simple_cpu_tb;
         #6;
         reset = 0;
 
-        #200;
+        #40;
 
-        $display("x1 = %d", cpu.rf.registers[1]);
+        $display("x1 = %h", cpu.rf.registers[1]);
         $display("x2 = %d", cpu.rf.registers[2]);
+        $display("x3 = %d", cpu.rf.registers[3]);
 
-        if (cpu.rf.registers[1] !== 32'd0)
-            $fatal(1, "Loop counter did not reach zero");
+        if (cpu.rf.registers[1] !== 32'hffffffff)
+            $fatal(1, "ADDI should write -1 to x1");
 
-        if (cpu.rf.registers[2] !== 32'd5)
-            $fatal(1, "BNE loop should increment x2 five times");
+        if (cpu.rf.registers[2] !== 32'd1)
+            $fatal(1, "SLTI should treat x1 as signed");
+
+        if (cpu.rf.registers[3] !== 32'd0)
+            $fatal(1, "SLTIU should treat x1 as unsigned");
 
         $finish;
     end
