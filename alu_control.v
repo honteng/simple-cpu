@@ -22,6 +22,8 @@ module alu_control (
 					3'b111: alu_op = 3'b010; // AND
 					3'b110: alu_op = 3'b011; // OR
 					3'b100: alu_op = 3'b100; // XOR
+					3'b010: alu_op = 3'b101; // SLT
+					3'b011: alu_op = 3'b110; // SLTU
 					default:
 						alu_op = 3'b000;
 				endcase
