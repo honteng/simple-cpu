@@ -17,6 +17,7 @@ module simple_cpu (
     wire [31:0] imm_i;
     wire [31:0] imm_s;
     wire [31:0] imm_b;
+    wire [31:0] imm_u;
     wire [31:0] imm_j;
 
     wire [31:0] read_data1;
@@ -28,6 +29,7 @@ module simple_cpu (
 
     wire [31:0] memory_read_data;
     wire [31:0] write_back_data;
+    wire [31:0] auipc_result;
     wire [31:0] jump_target;
     wire [31:0] jalr_target;
 
@@ -38,6 +40,8 @@ module simple_cpu (
     wire branch;
     wire jump;
     wire jump_reg;
+    wire use_lui;
+    wire use_auipc;
 
     wire registers_equal;
     wire branch_taken;
@@ -68,7 +72,8 @@ module simple_cpu (
         .imm_i(imm_i),
         .imm_s(imm_s),
         .imm_b(imm_b),
-	.imm_j(imm_j)
+        .imm_u(imm_u),
+        .imm_j(imm_j)
     );
 
     control_unit control (
@@ -80,7 +85,9 @@ module simple_cpu (
         .mem_to_reg(mem_to_reg),
         .branch(branch),
         .jump(jump),
-        .jump_reg(jump_reg)
+        .jump_reg(jump_reg),
+        .use_lui(use_lui),
+        .use_auipc(use_auipc)
     );
 
     register_file rf (
@@ -125,12 +132,19 @@ module simple_cpu (
         .read_data(memory_read_data)
     );
 
+    assign auipc_result =
+        pc + imm_u;
+
     assign write_back_data =
-        (jump || jump_reg)
-            ? pc_plus_4
-            : mem_to_reg
-                ? memory_read_data
-                : alu_result;
+        use_lui
+            ? imm_u
+            : use_auipc
+                ? auipc_result
+                : (jump || jump_reg)
+                    ? pc_plus_4
+                    : mem_to_reg
+                        ? memory_read_data
+                        : alu_result;
 
     assign registers_equal =
         read_data1 == read_data2;

@@ -8,7 +8,9 @@ module control_unit (
     output reg mem_to_reg,
     output reg branch,
     output reg jump,
-    output reg jump_reg
+    output reg jump_reg,
+    output reg use_lui,
+    output reg use_auipc
 );
 
     always @(*) begin
@@ -19,6 +21,8 @@ module control_unit (
         branch      = 0;
         jump        = 0;
         jump_reg    = 0;
+        use_lui     = 0;
+        use_auipc   = 0;
 
         case (opcode)
 
@@ -31,6 +35,18 @@ module control_unit (
             7'b0010011: begin
                 reg_write   = 1;
                 alu_src_imm = 1;
+            end
+
+            // LUI
+            7'b0110111: begin
+                reg_write = 1;
+                use_lui   = 1;
+            end
+
+            // AUIPC
+            7'b0010111: begin
+                reg_write = 1;
+                use_auipc = 1;
             end
 
             // LW

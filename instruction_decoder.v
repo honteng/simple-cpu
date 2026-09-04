@@ -11,6 +11,7 @@ module instruction_decoder (
     output wire [31:0] imm_i,
     output wire [31:0] imm_s,
     output wire [31:0] imm_b,
+    output wire [31:0] imm_u,
     output wire [31:0] imm_j
 );
 
@@ -41,6 +42,10 @@ module instruction_decoder (
          instruction[11:8],
          1'b0};
 
+    // U type
+    assign imm_u = {instruction[31:12], 12'b0};
+
+    // J type
     assign imm_j =
          {{11{instruction[31]}},
           instruction[31],

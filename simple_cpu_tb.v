@@ -22,17 +22,24 @@ module simple_cpu_tb;
         #6;
         reset = 0;
 
-        #60;
+        #40;
 
-        $display("x1 = %d", cpu.rf.registers[1]);
-        $display("x2 = %d", cpu.rf.registers[2]);
-        $display("x3 = %d", cpu.rf.registers[3]);
-        $display("x4 = %d", cpu.rf.registers[4]);
+        $display("x1 = %h", cpu.rf.registers[1]);
+        $display("x2 = %h", cpu.rf.registers[2]);
+        $display("x5 = %h", cpu.rf.registers[5]);
+        $display("x6 = %h", cpu.rf.registers[6]);
 
-        if (cpu.rf.registers[1] !== 32'd4)  $fatal(1, "JAL should save return address 0x04 in x1");
-        if (cpu.rf.registers[2] !== 32'd42) $fatal(1, "caller instruction after return did not run");
-        if (cpu.rf.registers[3] !== 32'd7)  $fatal(1, "function body did not run");
-        if (cpu.rf.registers[4] !== 32'd99) $fatal(1, "post-call jump did not reach done");
+        if (cpu.rf.registers[1] !== 32'h00000008)
+            $fatal(1, "JALR return address failed");
+
+        if (cpu.rf.registers[2] !== 32'd0)
+            $fatal(1, "Skipped instruction was executed");
+
+        if (cpu.rf.registers[5] !== 32'h00001000)
+            $fatal(1, "AUIPC failed");
+
+        if (cpu.rf.registers[6] !== 32'd42)
+            $fatal(1, "Far jump target failed");
 
         $finish;
     end
