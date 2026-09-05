@@ -44,7 +44,6 @@ module simple_cpu (
     wire jump_reg;
     wire [2:0] branch_type;
 
-    wire registers_equal;
     reg branch_condition;
     wire branch_taken;
 
@@ -170,9 +169,6 @@ module simple_cpu (
             default:  write_back_data = alu_result;
         endcase
     end
-
-    assign registers_equal =
-        read_data1 == read_data2;
 
     always @(*) begin
         case (branch_type)
