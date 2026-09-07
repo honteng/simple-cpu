@@ -26,7 +26,7 @@ module simple_cpu (
 
     wire [31:0] alu_input_b;
     wire [31:0] alu_result;
-    wire [2:0] alu_op;
+    wire [3:0] alu_op;
 
     wire [31:0] memory_read_data;
     reg [31:0] write_back_data;
