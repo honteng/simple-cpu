@@ -57,12 +57,15 @@ module alu_control (
 					end
 					3'b010: alu_op = ALU_SLT; // SLTI
 					3'b011: alu_op = ALU_SLTU; // SLTIU
+					3'b100: alu_op = ALU_XOR; // XORI
 					3'b101: begin
 						if (funct7 == 7'b0100000)
 							alu_op = ALU_SRA; // SRAI
 						else
 							alu_op = ALU_SRL; // SRLI
 					end
+					3'b110: alu_op = ALU_OR; // ORI
+					3'b111: alu_op = ALU_AND; // ANDI
 					default: alu_op = ALU_ADD;
 				endcase
 			end
