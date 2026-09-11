@@ -51,8 +51,18 @@ module alu_control (
 			7'b0010011: begin
 				case (funct3)
 					3'b000: alu_op = ALU_ADD; // ADDI
+					3'b001: begin
+						if (funct7 == 7'b0000000)
+							alu_op = ALU_SLL; // SLLI
+					end
 					3'b010: alu_op = ALU_SLT; // SLTI
 					3'b011: alu_op = ALU_SLTU; // SLTIU
+					3'b101: begin
+						if (funct7 == 7'b0100000)
+							alu_op = ALU_SRA; // SRAI
+						else
+							alu_op = ALU_SRL; // SRLI
+					end
 					default: alu_op = ALU_ADD;
 				endcase
 			end
