@@ -5,13 +5,18 @@ module data_memory (
 	input wire load_unsigned,
 	input wire [31:0] address,
 	input wire [31:0] write_data,
-	output reg [31:0] read_data
+	output reg [31:0] read_data,
+	output wire misaligned
 );
 
 	reg [7:0] memory [0:1023];
 	localparam MEM_BYTE = 2'b00;
 	localparam MEM_HALF = 2'b01;
 	localparam MEM_WORD = 2'b10;
+
+	assign misaligned =
+		(mem_size == MEM_HALF && address[0] != 1'b0) ||
+		(mem_size == MEM_WORD && address[1:0] != 2'b00);
 
 	// Size encoding: byte = 00, halfword = 01, word = 10.
 	always @(*) begin
@@ -50,7 +55,7 @@ module data_memory (
 	end
 
 	always @(posedge clk) begin
-		if (mem_write) begin
+		if (mem_write && !misaligned) begin
 			case (mem_size)
 				MEM_BYTE: begin
 					memory[address] <= write_data[7:0];

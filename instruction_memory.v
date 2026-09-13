@@ -10,17 +10,17 @@ module instruction_memory (
         // addi x1, x0, 100
         memory[0] = 32'h06400093;
 
-        // addi x2, x0, -1
-        memory[1] = 32'hfff00113;
+        // addi x2, x0, 42
+        memory[1] = 32'h02a00113;
 
-        // sb x2, 0(x1)
-        memory[2] = 32'h00208023;
+        // sw x2, 0(x1): address 100 is word-aligned
+        memory[2] = 32'h0020a023;
 
-        // lb x3, 0(x1)
-        memory[3] = 32'h00008183;
+        // lw x3, 0(x1): aligned load
+        memory[3] = 32'h0000a183;
 
-        // lbu x4, 0(x1)
-        memory[4] = 32'h0000c203;
+        // lw x4, 2(x1): address 102 is misaligned
+        memory[4] = 32'h0020a203;
 
         // nop
         memory[5] = 32'h00000013;

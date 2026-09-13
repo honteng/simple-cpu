@@ -35,7 +35,9 @@ module simple_cpu (
     wire [31:0] jalr_target;
 
     wire reg_write;
+    wire effective_reg_write;
     wire mem_write;
+    wire mem_misaligned;
     wire [1:0] mem_size;
     wire load_unsigned;
     wire alu_src_imm;
@@ -115,7 +117,7 @@ module simple_cpu (
 
     register_file rf (
         .clk(clk),
-        .write_enable(reg_write),
+        .write_enable(effective_reg_write),
         .read_addr1(rs1),
         .read_addr2(rs2),
         .write_addr(rd),
@@ -150,8 +152,13 @@ module simple_cpu (
         .load_unsigned(load_unsigned),
         .address(alu_result),
         .write_data(read_data2),
-        .read_data(memory_read_data)
+        .read_data(memory_read_data),
+        .misaligned(mem_misaligned)
     );
+
+    assign effective_reg_write =
+        reg_write &&
+        !(wb_sel == WB_MEM && mem_misaligned);
 
     always @(*) begin
         case (imm_sel)
