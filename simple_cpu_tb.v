@@ -55,6 +55,15 @@ module simple_cpu_tb;
         if (cpu.rf.registers[4] !== 32'h12345678)
             $fatal(1, "Misaligned LW changed its destination register");
 
+        if (cpu.mepc !== 32'h00000010)
+            $fatal(1, "mepc incorrect: %h", cpu.mepc);
+
+        if (cpu.mcause !== 32'd4)
+            $fatal(1, "mcause incorrect: %d", cpu.mcause);
+
+        if (cpu.rf.registers[10] !== 32'd99)
+            $fatal(1, "trap handler was not executed");
+
         $finish;
     end
 

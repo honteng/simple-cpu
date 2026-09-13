@@ -3,6 +3,9 @@ module simple_cpu (
     input wire reset
 );
 
+    reg [31:0] mepc;
+    reg [31:0] mcause;
+
     wire [31:0] pc;
     wire [31:0] next_pc;
     wire [31:0] instruction;
@@ -38,6 +41,11 @@ module simple_cpu (
     wire effective_reg_write;
     wire mem_write;
     wire mem_misaligned;
+    wire load_access;
+    wire store_access;
+    wire load_misaligned;
+    wire store_misaligned;
+    wire trap;
     wire [1:0] mem_size;
     wire load_unsigned;
     wire alu_src_imm;
@@ -71,6 +79,8 @@ module simple_cpu (
     localparam IMM_B = 3'b010;
     localparam IMM_U = 3'b011;
     localparam IMM_J = 3'b100;
+
+    localparam TRAP_VECTOR = 32'h00000100;
 
     program_counter pc0 (
         .clk(clk),
@@ -156,9 +166,38 @@ module simple_cpu (
         .misaligned(mem_misaligned)
     );
 
+    assign load_access =
+        (wb_sel == WB_MEM);
+
+    assign store_access =
+        mem_write;
+
+    assign load_misaligned =
+        load_access && mem_misaligned;
+
+    assign store_misaligned =
+        store_access && mem_misaligned;
+
+    assign trap =
+        load_misaligned ||
+        store_misaligned;
+
+    always @(posedge clk) begin
+        if (reset) begin
+            mepc   <= 32'd0;
+            mcause <= 32'd0;
+        end else if (trap) begin
+            mepc <= pc;
+
+            if (load_misaligned)
+                mcause <= 32'd4;
+            else if (store_misaligned)
+                mcause <= 32'd6;
+        end
+    end
+
     assign effective_reg_write =
-        reg_write &&
-        !(wb_sel == WB_MEM && mem_misaligned);
+        reg_write && !trap;
 
     always @(*) begin
         case (imm_sel)
@@ -211,12 +250,14 @@ module simple_cpu (
     assign jalr_target = {alu_result[31:1], 1'b0};
 
     assign next_pc =
-        jump
-            ? jump_target
-            : jump_reg
-                ? jalr_target
-            : branch_taken
-                ? branch_target
-                : pc_plus_4;
+        trap
+            ? TRAP_VECTOR
+            : jump
+                ? jump_target
+                : jump_reg
+                    ? jalr_target
+                    : branch_taken
+                        ? branch_target
+                        : pc_plus_4;
 
 endmodule

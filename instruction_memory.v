@@ -24,6 +24,9 @@ module instruction_memory (
 
         // nop
         memory[5] = 32'h00000013;
+
+        // 0x100: trap handler marker, addi x10, x0, 99
+        memory[64] = 32'h06300513;
     end
 
     assign instruction =
