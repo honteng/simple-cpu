@@ -4,6 +4,8 @@ module control_unit (
 
     output reg reg_write,
     output reg mem_write,
+    output reg [1:0] mem_size,
+    output reg load_unsigned,
     output reg alu_src_imm,
     output reg [2:0] imm_sel,
     output reg [2:0] wb_sel,
@@ -12,6 +14,10 @@ module control_unit (
     output reg jump_reg,
     output reg [2:0] branch_type
 );
+
+    localparam MEM_BYTE = 2'b00;
+    localparam MEM_HALF = 2'b01;
+    localparam MEM_WORD = 2'b10;
 
     localparam WB_ALU   = 3'b000;
     localparam WB_MEM   = 3'b001;
@@ -34,6 +40,8 @@ module control_unit (
     always @(*) begin
         reg_write   = 0;
         mem_write   = 0;
+        mem_size      = MEM_WORD;
+        load_unsigned = 0;
         alu_src_imm = 0;
         imm_sel     = IMM_I;
         wb_sel      = WB_ALU;
@@ -70,23 +78,48 @@ module control_unit (
                 wb_sel    = WB_AUIPC;
             end
 
-            // LW
+            // Loads
             7'b0000011: begin
-                if (funct3 == 3'b010) begin
-                    reg_write   = 1;
-                    alu_src_imm = 1;
-                    imm_sel     = IMM_I;
-                    wb_sel      = WB_MEM;
-                end
+                reg_write   = 1;
+                alu_src_imm = 1;
+                wb_sel      = WB_MEM;
+                imm_sel     = IMM_I;
+
+                case (funct3)
+                    3'b000: begin // LB
+                        mem_size      = MEM_BYTE;
+                        load_unsigned = 0;
+                    end
+                    3'b001: begin // LH
+                        mem_size      = MEM_HALF;
+                        load_unsigned = 0;
+                    end
+                    3'b010: begin // LW
+                        mem_size      = MEM_WORD;
+                        load_unsigned = 0;
+                    end
+                    3'b100: begin // LBU
+                        mem_size      = MEM_BYTE;
+                        load_unsigned = 1;
+                    end
+                    3'b101: begin // LHU
+                        mem_size      = MEM_HALF;
+                        load_unsigned = 1;
+                    end
+                endcase
             end
 
-            // SW
+            // Stores
             7'b0100011: begin
-                if (funct3 == 3'b010) begin
-                    mem_write   = 1;
-                    alu_src_imm = 1;
-                    imm_sel     = IMM_S;
-                end
+                mem_write   = 1;
+                alu_src_imm = 1;
+                imm_sel     = IMM_S;
+
+                case (funct3)
+                    3'b000: mem_size = MEM_BYTE; // SB
+                    3'b001: mem_size = MEM_HALF; // SH
+                    3'b010: mem_size = MEM_WORD; // SW
+                endcase
             end
 
             // Branches

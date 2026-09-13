@@ -22,24 +22,27 @@ module simple_cpu_tb;
         #6;
         reset = 0;
 
-        #50;
+        #60;
 
         $display("x1 = %d", cpu.rf.registers[1]);
-        $display("x2 = %d", cpu.rf.registers[2]);
-        $display("x3 = %d", cpu.rf.registers[3]);
-        $display("x4 = %d", cpu.rf.registers[4]);
+        $display("x2 = %h", cpu.rf.registers[2]);
+        $display("x3 = %h", cpu.rf.registers[3]);
+        $display("x4 = %h", cpu.rf.registers[4]);
 
-        if (cpu.rf.registers[1] !== 32'd10)
-            $fatal(1, "ADDI failed");
+        if (cpu.rf.registers[1] !== 32'd100)
+            $fatal(1, "ADDI address setup failed");
 
-        if (cpu.rf.registers[2] !== 32'd5)
-            $fatal(1, "XORI failed");
+        if (cpu.rf.registers[2] !== 32'hffffffff)
+            $fatal(1, "ADDI should write -1 to x2");
 
-        if (cpu.rf.registers[3] !== 32'd15)
-            $fatal(1, "ORI failed");
+        if (cpu.dmem.memory[100] !== 8'hff)
+            $fatal(1, "SB should store the low byte at address 100");
 
-        if (cpu.rf.registers[4] !== 32'd2)
-            $fatal(1, "ANDI failed");
+        if (cpu.rf.registers[3] !== 32'hffffffff)
+            $fatal(1, "LB should sign-extend 0xff");
+
+        if (cpu.rf.registers[4] !== 32'h000000ff)
+            $fatal(1, "LBU should zero-extend 0xff");
 
         $finish;
     end

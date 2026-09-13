@@ -7,20 +7,23 @@ module instruction_memory (
 
 
     initial begin
-        // addi x1, x0, 10
-        memory[0] = 32'h00a00093;
+        // addi x1, x0, 100
+        memory[0] = 32'h06400093;
 
-        // xori x2, x1, 15
-        memory[1] = 32'h00f0c113;
+        // addi x2, x0, -1
+        memory[1] = 32'hfff00113;
 
-        // ori x3, x1, 5
-        memory[2] = 32'h0050e193;
+        // sb x2, 0(x1)
+        memory[2] = 32'h00208023;
 
-        // andi x4, x1, 6
-        memory[3] = 32'h0060f213;
+        // lb x3, 0(x1)
+        memory[3] = 32'h00008183;
+
+        // lbu x4, 0(x1)
+        memory[4] = 32'h0000c203;
 
         // nop
-        memory[4] = 32'h00000013;
+        memory[5] = 32'h00000013;
     end
 
     assign instruction =

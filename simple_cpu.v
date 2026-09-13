@@ -36,6 +36,8 @@ module simple_cpu (
 
     wire reg_write;
     wire mem_write;
+    wire [1:0] mem_size;
+    wire load_unsigned;
     wire alu_src_imm;
     wire [2:0] imm_sel;
     wire [2:0] wb_sel;
@@ -100,6 +102,8 @@ module simple_cpu (
         .funct3(funct3),
         .reg_write(reg_write),
         .mem_write(mem_write),
+        .mem_size(mem_size),
+        .load_unsigned(load_unsigned),
         .alu_src_imm(alu_src_imm),
         .imm_sel(imm_sel),
         .wb_sel(wb_sel),
@@ -142,6 +146,8 @@ module simple_cpu (
     data_memory dmem (
         .clk(clk),
         .mem_write(mem_write),
+        .mem_size(mem_size),
+        .load_unsigned(load_unsigned),
         .address(alu_result),
         .write_data(read_data2),
         .read_data(memory_read_data)
