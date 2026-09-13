@@ -9,6 +9,10 @@ module simple_cpu (
     wire [31:0] pc;
     wire [31:0] next_pc;
     wire [31:0] instruction;
+    wire is_mret;
+
+    assign is_mret =
+        instruction == 32'h30200073;
 
     wire [6:0] opcode;
     wire [4:0] rd;
@@ -252,12 +256,14 @@ module simple_cpu (
     assign next_pc =
         trap
             ? TRAP_VECTOR
-            : jump
-                ? jump_target
-                : jump_reg
-                    ? jalr_target
-                    : branch_taken
-                        ? branch_target
-                        : pc_plus_4;
+            : is_mret
+                ? mepc
+                : jump
+                    ? jump_target
+                    : jump_reg
+                        ? jalr_target
+                        : branch_taken
+                            ? branch_target
+                            : pc_plus_4;
 
 endmodule

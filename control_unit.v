@@ -12,6 +12,7 @@ module control_unit (
     output reg branch,
     output reg jump,
     output reg jump_reg,
+    output reg mret,
     output reg [2:0] branch_type
 );
 
@@ -48,6 +49,7 @@ module control_unit (
         branch      = 0;
         jump        = 0;
         jump_reg    = 0;
+        mret        = 0;
         branch_type = BR_NONE;
 
         case (opcode)

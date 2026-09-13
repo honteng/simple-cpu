@@ -25,8 +25,11 @@ module instruction_memory (
         // nop
         memory[5] = 32'h00000013;
 
-        // 0x100: trap handler marker, addi x10, x0, 99
-        memory[64] = 32'h06300513;
+        // 0x20: addi x5, x0, 42
+        memory[8] = 32'h02a00293;
+
+        // 0x100: mret
+        memory[64] = 32'h30200073;
     end
 
     assign instruction =
