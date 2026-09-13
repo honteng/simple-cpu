@@ -25,6 +25,7 @@ module control_unit (
     localparam WB_PC4   = 3'b010;
     localparam WB_IMM_U = 3'b011;
     localparam WB_AUIPC = 3'b100;
+    localparam WB_CSR   = 3'b101;
 
     localparam IMM_I = 3'b000;
     localparam IMM_S = 3'b001;
@@ -157,6 +158,15 @@ module control_unit (
                 imm_sel   = IMM_J;
                 jump      = 1;
                 wb_sel    = WB_PC4;
+            end
+            // CSR register instructions
+            7'b1110011: begin
+                case (funct3)
+                    3'b001, 3'b010: begin
+                        reg_write = 1;
+                        wb_sel    = WB_CSR;
+                    end
+                endcase
             end
         endcase
     end

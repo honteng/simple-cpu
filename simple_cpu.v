@@ -5,11 +5,23 @@ module simple_cpu (
 
     reg [31:0] mepc;
     reg [31:0] mcause;
+    reg [31:0] csr_read_data;
+    wire [11:0] csr_addr;
+
+    always @(*) begin
+        case (csr_addr)
+            12'h341: csr_read_data = mepc;
+            12'h342: csr_read_data = mcause;
+            default: csr_read_data = 32'd0;
+        endcase
+    end
 
     wire [31:0] pc;
     wire [31:0] next_pc;
     wire [31:0] instruction;
     wire is_mret;
+
+    assign csr_addr = instruction[31:20];
 
     assign is_mret =
         instruction == 32'h30200073;
@@ -20,6 +32,16 @@ module simple_cpu (
     wire [4:0] rs2;
     wire [2:0] funct3;
     wire [6:0] funct7;
+    wire is_csrrw;
+    wire is_csrrs;
+
+    assign is_csrrw =
+        opcode == 7'b1110011 &&
+        funct3 == 3'b001;
+
+    assign is_csrrs =
+        opcode == 7'b1110011 &&
+        funct3 == 3'b010;
 
     wire [31:0] imm_i;
     wire [31:0] imm_s;
@@ -77,6 +99,7 @@ module simple_cpu (
     localparam WB_PC4   = 3'b010;
     localparam WB_IMM_U = 3'b011;
     localparam WB_AUIPC = 3'b100;
+    localparam WB_CSR   = 3'b101;
 
     localparam IMM_I = 3'b000;
     localparam IMM_S = 3'b001;
@@ -197,6 +220,11 @@ module simple_cpu (
                 mcause <= 32'd4;
             else if (store_misaligned)
                 mcause <= 32'd6;
+        end else if (is_csrrw) begin
+            case (csr_addr)
+                12'h341: mepc <= read_data1;
+                12'h342: mcause <= read_data1;
+            endcase
         end
     end
 
@@ -222,6 +250,7 @@ module simple_cpu (
             WB_PC4:   write_back_data = pc_plus_4;
             WB_IMM_U: write_back_data = immediate;
             WB_AUIPC: write_back_data = auipc_result;
+            WB_CSR:   write_back_data = csr_read_data;
             default:  write_back_data = alu_result;
         endcase
     end
