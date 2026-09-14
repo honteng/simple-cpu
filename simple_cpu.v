@@ -3,25 +3,21 @@ module simple_cpu (
     input wire reset
 );
 
-    reg [31:0] mepc;
-    reg [31:0] mcause;
-    reg [31:0] csr_read_data;
+    wire [31:0] mepc;
+    wire [31:0] mcause;
+    wire [31:0] csr_read_data;
     wire [11:0] csr_addr;
-
-    always @(*) begin
-        case (csr_addr)
-            12'h341: csr_read_data = mepc;
-            12'h342: csr_read_data = mcause;
-            default: csr_read_data = 32'd0;
-        endcase
-    end
+    wire [1:0] csr_cmd;
+    wire csr_write_enable;
+    wire [31:0] trap_cause;
 
     wire [31:0] pc;
     wire [31:0] next_pc;
     wire [31:0] instruction;
     wire is_mret;
 
-    assign csr_addr = instruction[31:20];
+    assign csr_addr =
+        instruction[31:20];
 
     assign is_mret =
         instruction == 32'h30200073;
@@ -32,16 +28,6 @@ module simple_cpu (
     wire [4:0] rs2;
     wire [2:0] funct3;
     wire [6:0] funct7;
-    wire is_csrrw;
-    wire is_csrrs;
-
-    assign is_csrrw =
-        opcode == 7'b1110011 &&
-        funct3 == 3'b001;
-
-    assign is_csrrs =
-        opcode == 7'b1110011 &&
-        funct3 == 3'b010;
 
     wire [31:0] imm_i;
     wire [31:0] imm_s;
@@ -101,6 +87,11 @@ module simple_cpu (
     localparam WB_AUIPC = 3'b100;
     localparam WB_CSR   = 3'b101;
 
+    localparam CSR_NONE = 2'b00;
+    localparam CSR_RW   = 2'b01;
+    localparam CSR_RS   = 2'b10;
+    localparam CSR_RC   = 2'b11;
+
     localparam IMM_I = 3'b000;
     localparam IMM_S = 3'b001;
     localparam IMM_B = 3'b010;
@@ -146,6 +137,7 @@ module simple_cpu (
         .alu_src_imm(alu_src_imm),
         .imm_sel(imm_sel),
         .wb_sel(wb_sel),
+        .csr_cmd(csr_cmd),
         .branch(branch),
         .jump(jump),
         .jump_reg(jump_reg),
@@ -209,24 +201,33 @@ module simple_cpu (
         load_misaligned ||
         store_misaligned;
 
-    always @(posedge clk) begin
-        if (reset) begin
-            mepc   <= 32'd0;
-            mcause <= 32'd0;
-        end else if (trap) begin
-            mepc <= pc;
+    assign trap_cause =
+        load_misaligned
+            ? 32'd4
+            : 32'd6;
 
-            if (load_misaligned)
-                mcause <= 32'd4;
-            else if (store_misaligned)
-                mcause <= 32'd6;
-        end else if (is_csrrw) begin
-            case (csr_addr)
-                12'h341: mepc <= read_data1;
-                12'h342: mcause <= read_data1;
-            endcase
-        end
-    end
+    // CSRRS/CSRRC with rs1 = x0 read the CSR without writing it.
+    assign csr_write_enable =
+        (csr_cmd == CSR_RW) ||
+        (
+            (csr_cmd == CSR_RS || csr_cmd == CSR_RC)
+            && rs1 != 5'd0
+        );
+
+    csr_file csr0 (
+        .clk(clk),
+        .reset(reset),
+        .trap(trap),
+        .trap_pc(pc),
+        .trap_cause(trap_cause),
+        .csr_addr(csr_addr),
+        .csr_cmd(csr_cmd),
+        .csr_write_enable(csr_write_enable),
+        .csr_write_data(read_data1),
+        .csr_read_data(csr_read_data),
+        .mepc(mepc),
+        .mcause(mcause)
+    );
 
     assign effective_reg_write =
         reg_write && !trap;

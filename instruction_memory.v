@@ -7,35 +7,26 @@ module instruction_memory (
 
 
     initial begin
-        // addi x1, x0, 100
-        memory[0] = 32'h06400093;
+        // addi x1, x0, 3
+        memory[0] = 32'h00300093;
 
-        // addi x2, x0, 42
-        memory[1] = 32'h02a00113;
+        // csrrw x2, mcause, x1
+        memory[1] = 32'h34209173;
 
-        // sw x2, 0(x1): address 100 is word-aligned
-        memory[2] = 32'h0020a023;
+        // addi x3, x0, 4
+        memory[2] = 32'h00400193;
 
-        // 0x0c: lw x3, 2(x1), misaligned word access
-        memory[3] = 32'h0020a183;
+        // csrrs x4, mcause, x3
+        memory[3] = 32'h3421a273;
 
-        // 0x10: addi x4, x0, 77
-        memory[4] = 32'h04d00213;
+        // addi x5, x0, 2
+        memory[4] = 32'h00200293;
 
-        // 0x14: jal x0, 0, self loop
-        memory[5] = 32'h0000006f;
+        // csrrc x6, mcause, x5
+        memory[5] = 32'h3422b373;
 
-        // 0x100: csrrs x5, mepc, x0 (csrr x5, mepc)
-        memory[64] = 32'h341022f3;
-
-        // 0x104: addi x5, x5, 4
-        memory[65] = 32'h00428293;
-
-        // 0x108: csrrw x0, mepc, x5 (csrw mepc, x5)
-        memory[66] = 32'h34129073;
-
-        // 0x10c: mret
-        memory[67] = 32'h30200073;
+        // jal x0, 0: stop advancing after the test sequence
+        memory[6] = 32'h0000006f;
     end
 
     assign instruction =

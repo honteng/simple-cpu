@@ -9,16 +9,21 @@ module control_unit (
     output reg alu_src_imm,
     output reg [2:0] imm_sel,
     output reg [2:0] wb_sel,
+    output reg [1:0] csr_cmd,
     output reg branch,
     output reg jump,
     output reg jump_reg,
-    output reg mret,
     output reg [2:0] branch_type
 );
 
     localparam MEM_BYTE = 2'b00;
     localparam MEM_HALF = 2'b01;
     localparam MEM_WORD = 2'b10;
+
+    localparam CSR_NONE = 2'b00;
+    localparam CSR_RW   = 2'b01;
+    localparam CSR_RS   = 2'b10;
+    localparam CSR_RC   = 2'b11;
 
     localparam WB_ALU   = 3'b000;
     localparam WB_MEM   = 3'b001;
@@ -47,10 +52,10 @@ module control_unit (
         alu_src_imm = 0;
         imm_sel     = IMM_I;
         wb_sel      = WB_ALU;
+        csr_cmd     = CSR_NONE;
         branch      = 0;
         jump        = 0;
         jump_reg    = 0;
-        mret        = 0;
         branch_type = BR_NONE;
 
         case (opcode)
@@ -159,12 +164,23 @@ module control_unit (
                 jump      = 1;
                 wb_sel    = WB_PC4;
             end
-            // CSR register instructions
+            // CSR instructions
             7'b1110011: begin
                 case (funct3)
-                    3'b001, 3'b010: begin
+                    3'b001: begin // CSRRW
                         reg_write = 1;
                         wb_sel    = WB_CSR;
+                        csr_cmd   = CSR_RW;
+                    end
+                    3'b010: begin // CSRRS
+                        reg_write = 1;
+                        wb_sel    = WB_CSR;
+                        csr_cmd   = CSR_RS;
+                    end
+                    3'b011: begin // CSRRC
+                        reg_write = 1;
+                        wb_sel    = WB_CSR;
+                        csr_cmd   = CSR_RC;
                     end
                 endcase
             end

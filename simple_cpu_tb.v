@@ -26,34 +26,29 @@ module simple_cpu_tb;
 
         $display("mepc   = %h", cpu.mepc);
         $display("mcause = %h", cpu.mcause);
+        $display("x2     = %d", cpu.rf.registers[2]);
         $display("x4     = %d", cpu.rf.registers[4]);
-        $display("x5     = %h", cpu.rf.registers[5]);
+        $display("x6     = %d", cpu.rf.registers[6]);
 
-        if (cpu.mcause !== 32'd4)
-            $fatal(
-                1,
-                "mcause should be load-address-misaligned: %d",
-                cpu.mcause
-            );
+        if (cpu.mcause !== 32'd5)
+            $fatal(1, "CSR commands should leave mcause = 5: %h", cpu.mcause);
 
-        if (cpu.mepc !== 32'h00000010)
-            $fatal(
-                1,
-                "handler should update mepc to 0x10: %h",
-                cpu.mepc
-            );
+        if (cpu.mepc !== 32'd0)
+            $fatal(1, "mcause operations should not change mepc");
 
-        if (cpu.rf.registers[4] !== 32'd77)
-            $fatal(
-                1,
-                "execution did not resume after trap"
-            );
+        if (cpu.rf.registers[1] !== 32'd3 ||
+            cpu.rf.registers[3] !== 32'd4 ||
+            cpu.rf.registers[5] !== 32'd2)
+            $fatal(1, "ADDI source setup failed");
 
-        if (cpu.rf.registers[5] !== 32'h00000010)
-            $fatal(
-                1,
-                "handler did not calculate mepc + 4"
-            );
+        if (cpu.rf.registers[2] !== 32'd0)
+            $fatal(1, "CSRRW should return the old mcause = 0");
+
+        if (cpu.rf.registers[4] !== 32'd3)
+            $fatal(1, "CSRRS should return the old mcause = 3");
+
+        if (cpu.rf.registers[6] !== 32'd7)
+            $fatal(1, "CSRRC should return the old mcause = 7");
 
         $display("PASS");
         $finish;
