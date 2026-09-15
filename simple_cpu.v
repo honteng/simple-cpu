@@ -9,18 +9,25 @@ module simple_cpu (
     wire [11:0] csr_addr;
     wire [1:0] csr_cmd;
     wire csr_write_enable;
-    wire [31:0] trap_cause;
 
     wire [31:0] pc;
     wire [31:0] next_pc;
     wire [31:0] instruction;
     wire is_mret;
+    wire is_ecall;
+    wire is_ebreak;
 
     assign csr_addr =
         instruction[31:20];
 
     assign is_mret =
         instruction == 32'h30200073;
+
+    assign is_ecall =
+        instruction == 32'h00000073;
+
+    assign is_ebreak =
+        instruction == 32'h00100073;
 
     wire [6:0] opcode;
     wire [4:0] rd;
@@ -198,13 +205,10 @@ module simple_cpu (
         store_access && mem_misaligned;
 
     assign trap =
-        load_misaligned ||
-        store_misaligned;
-
-    assign trap_cause =
-        load_misaligned
-            ? 32'd4
-            : 32'd6;
+        load_misaligned  ||
+        store_misaligned ||
+        is_ecall         ||
+        is_ebreak;
 
     // CSRRS/CSRRC with rs1 = x0 read the CSR without writing it.
     assign csr_write_enable =
@@ -219,7 +223,10 @@ module simple_cpu (
         .reset(reset),
         .trap(trap),
         .trap_pc(pc),
-        .trap_cause(trap_cause),
+        .is_ebreak(is_ebreak),
+        .load_misaligned(load_misaligned),
+        .store_misaligned(store_misaligned),
+        .is_ecall(is_ecall),
         .csr_addr(csr_addr),
         .csr_cmd(csr_cmd),
         .csr_write_enable(csr_write_enable),

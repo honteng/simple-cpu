@@ -4,7 +4,10 @@ module csr_file (
 
     input  wire        trap,
     input  wire [31:0] trap_pc,
-    input  wire [31:0] trap_cause,
+    input  wire        is_ebreak,
+    input  wire        load_misaligned,
+    input  wire        store_misaligned,
+    input  wire        is_ecall,
 
     input  wire [11:0] csr_addr,
     input  wire [1:0]  csr_cmd,
@@ -42,8 +45,16 @@ module csr_file (
             mepc   <= 32'd0;
             mcause <= 32'd0;
         end else if (trap) begin
-            mepc   <= trap_pc;
-            mcause <= trap_cause;
+            mepc <= trap_pc;
+
+            if (is_ebreak)
+                mcause <= 32'd3;
+            else if (load_misaligned)
+                mcause <= 32'd4;
+            else if (store_misaligned)
+                mcause <= 32'd6;
+            else if (is_ecall)
+                mcause <= 32'd11;
         end else if (csr_write_enable) begin
             case (csr_addr)
                 CSR_MEPC: begin
