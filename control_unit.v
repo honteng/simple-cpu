@@ -13,7 +13,8 @@ module control_unit (
     output reg branch,
     output reg jump,
     output reg jump_reg,
-    output reg [2:0] branch_type
+    output reg [2:0] branch_type,
+    output reg illegal_instruction
 );
 
     localparam MEM_BYTE = 2'b00;
@@ -57,16 +58,19 @@ module control_unit (
         jump        = 0;
         jump_reg    = 0;
         branch_type = BR_NONE;
+        illegal_instruction = 1;
 
         case (opcode)
 
             // R type
             7'b0110011: begin
+                illegal_instruction = 0;
                 reg_write = 1;
             end
 
             // I-type ALU instructions: ADDI, SLTI, SLTIU
             7'b0010011: begin
+                illegal_instruction = 0;
                 reg_write   = 1;
                 alu_src_imm = 1;
                 imm_sel     = IMM_I;
@@ -74,6 +78,7 @@ module control_unit (
 
             // LUI
             7'b0110111: begin
+                illegal_instruction = 0;
                 reg_write = 1;
                 imm_sel   = IMM_U;
                 wb_sel    = WB_IMM_U;
@@ -81,6 +86,7 @@ module control_unit (
 
             // AUIPC
             7'b0010111: begin
+                illegal_instruction = 0;
                 reg_write = 1;
                 imm_sel   = IMM_U;
                 wb_sel    = WB_AUIPC;
@@ -95,22 +101,27 @@ module control_unit (
 
                 case (funct3)
                     3'b000: begin // LB
+                        illegal_instruction = 0;
                         mem_size      = MEM_BYTE;
                         load_unsigned = 0;
                     end
                     3'b001: begin // LH
+                        illegal_instruction = 0;
                         mem_size      = MEM_HALF;
                         load_unsigned = 0;
                     end
                     3'b010: begin // LW
+                        illegal_instruction = 0;
                         mem_size      = MEM_WORD;
                         load_unsigned = 0;
                     end
                     3'b100: begin // LBU
+                        illegal_instruction = 0;
                         mem_size      = MEM_BYTE;
                         load_unsigned = 1;
                     end
                     3'b101: begin // LHU
+                        illegal_instruction = 0;
                         mem_size      = MEM_HALF;
                         load_unsigned = 1;
                     end
@@ -124,9 +135,18 @@ module control_unit (
                 imm_sel     = IMM_S;
 
                 case (funct3)
-                    3'b000: mem_size = MEM_BYTE; // SB
-                    3'b001: mem_size = MEM_HALF; // SH
-                    3'b010: mem_size = MEM_WORD; // SW
+                    3'b000: begin
+                        illegal_instruction = 0;
+                        mem_size = MEM_BYTE; // SB
+                    end
+                    3'b001: begin
+                        illegal_instruction = 0;
+                        mem_size = MEM_HALF; // SH
+                    end
+                    3'b010: begin
+                        illegal_instruction = 0;
+                        mem_size = MEM_WORD; // SW
+                    end
                 endcase
             end
 
@@ -135,10 +155,22 @@ module control_unit (
                 branch = 1;
                 imm_sel = IMM_B;
                 case (funct3)
-                    3'b000: branch_type = BR_EQ; // BEQ
-                    3'b001: branch_type = BR_NE; // BNE
-                    3'b100: branch_type = BR_LT; // BLT
-                    3'b101: branch_type = BR_GE; // BGE
+                    3'b000: begin
+                        illegal_instruction = 0;
+                        branch_type = BR_EQ; // BEQ
+                    end
+                    3'b001: begin
+                        illegal_instruction = 0;
+                        branch_type = BR_NE; // BNE
+                    end
+                    3'b100: begin
+                        illegal_instruction = 0;
+                        branch_type = BR_LT; // BLT
+                    end
+                    3'b101: begin
+                        illegal_instruction = 0;
+                        branch_type = BR_GE; // BGE
+                    end
                     default: begin
                         branch = 0;
                         branch_type = BR_NONE;
@@ -149,6 +181,7 @@ module control_unit (
             // JALR
             7'b1100111: begin
                 if (funct3 == 3'b000) begin
+                    illegal_instruction = 0;
                     reg_write   = 1;
                     alu_src_imm = 1;
                     imm_sel     = IMM_I;
@@ -159,6 +192,7 @@ module control_unit (
 
             // JAL
             7'b1101111: begin
+                illegal_instruction = 0;
                 reg_write = 1;
                 imm_sel   = IMM_J;
                 jump      = 1;
@@ -167,17 +201,23 @@ module control_unit (
             // CSR instructions
             7'b1110011: begin
                 case (funct3)
+                    3'b000: begin // ECALL, EBREAK, MRET
+                        illegal_instruction = 0;
+                    end
                     3'b001: begin // CSRRW
+                        illegal_instruction = 0;
                         reg_write = 1;
                         wb_sel    = WB_CSR;
                         csr_cmd   = CSR_RW;
                     end
                     3'b010: begin // CSRRS
+                        illegal_instruction = 0;
                         reg_write = 1;
                         wb_sel    = WB_CSR;
                         csr_cmd   = CSR_RS;
                     end
                     3'b011: begin // CSRRC
+                        illegal_instruction = 0;
                         reg_write = 1;
                         wb_sel    = WB_CSR;
                         csr_cmd   = CSR_RC;

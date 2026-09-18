@@ -22,39 +22,32 @@ module simple_cpu_tb;
         #6;
         reset = 0;
 
-        #300;
+        #120;
 
         $display("mepc   = %h", cpu.mepc);
         $display("mcause = %h", cpu.mcause);
         $display("x1     = %d", cpu.rf.registers[1]);
         $display("x2     = %d", cpu.rf.registers[2]);
-        $display("x3     = %d", cpu.rf.registers[3]);
-        $display("x10    = %d", cpu.rf.registers[10]);
-        $display("x11    = %d", cpu.rf.registers[11]);
+        $display("x5     = %d", cpu.rf.registers[5]);
+        $display("x6     = %h", cpu.rf.registers[6]);
 
-        if (cpu.mcause !== 32'd3)
-            $fatal(1, "EBREAK should set mcause to 3: %h", cpu.mcause);
+        if (cpu.mcause !== 32'd2)
+            $fatal(1, "Illegal instruction should set mcause to 2: %h", cpu.mcause);
 
-        if (cpu.mepc !== 32'h00000010)
-            $fatal(1, "Second handler should advance mepc to 0x10: %h", cpu.mepc);
+        if (cpu.mepc !== 32'h00000008)
+            $fatal(1, "Handler should advance mepc to 0x08: %h", cpu.mepc);
 
         if (cpu.rf.registers[1] !== 32'd10)
             $fatal(1, "Instruction before ECALL did not execute");
 
         if (cpu.rf.registers[2] !== 32'd42)
-            $fatal(1, "Execution did not resume after ECALL");
+            $fatal(1, "Execution did not resume after illegal instruction");
 
-        if (cpu.rf.registers[3] !== 32'd77)
-            $fatal(1, "Execution did not resume after EBREAK");
+        if (cpu.rf.registers[5] !== 32'd2)
+            $fatal(1, "Handler did not read illegal-instruction mcause");
 
-        if (cpu.rf.registers[5] !== 32'd3 || cpu.rf.registers[7] !== 32'h00000010)
-            $fatal(1, "Handler did not read mcause or calculate mepc + 4");
-
-        if (cpu.rf.registers[10] !== 32'd1)
-            $fatal(1, "ECALL handler path was not executed");
-
-        if (cpu.rf.registers[11] !== 32'd1)
-            $fatal(1, "EBREAK handler path was not executed");
+        if (cpu.rf.registers[6] !== 32'h00000008)
+            $fatal(1, "Handler did not calculate mepc + 4");
 
         $display("PASS");
         $finish;
