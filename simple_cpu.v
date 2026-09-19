@@ -79,6 +79,8 @@ module simple_cpu (
     wire [31:0] auipc_result;
     wire [31:0] jump_target;
     wire [31:0] jalr_target;
+    wire [31:0] control_target;
+    wire instruction_address_misaligned;
 
     wire reg_write;
     wire effective_reg_write;
@@ -230,26 +232,30 @@ module simple_cpu (
         store_access && mem_misaligned;
 
     assign trap =
-        illegal_instruction_final ||
-        load_misaligned           ||
-        store_misaligned          ||
-        is_ecall                   ||
+        instruction_address_misaligned ||
+        illegal_instruction_final      ||
+        load_misaligned                ||
+        store_misaligned               ||
+        is_ecall                       ||
         is_ebreak;
 
     assign trap_cause =
-        illegal_instruction_final ? 32'd2  :
-        is_ebreak                 ? 32'd3  :
-        load_misaligned           ? 32'd4  :
-        store_misaligned          ? 32'd6  :
-        is_ecall                  ? 32'd11 :
-                                    32'd0;
+        instruction_address_misaligned ? 32'd0  :
+        illegal_instruction_final      ? 32'd2  :
+        is_ebreak                      ? 32'd3  :
+        load_misaligned                ? 32'd4  :
+        store_misaligned               ? 32'd6  :
+        is_ecall                       ? 32'd11 :
+                                        32'd0;
 
     assign trap_value =
-        illegal_instruction_final
-            ? instruction
-            : load_misaligned || store_misaligned
-                ? alu_result
-                : 32'd0;
+        instruction_address_misaligned
+            ? control_target
+            : illegal_instruction_final
+                ? instruction
+                : load_misaligned || store_misaligned
+                    ? alu_result
+                    : 32'd0;
 
     // CSRRS/CSRRC with rs1 = x0 read the CSR without writing it.
     assign csr_write_enable =
@@ -333,6 +339,19 @@ module simple_cpu (
 
     assign jump_target = pc + immediate;
     assign jalr_target = {alu_result[31:1], 1'b0};
+
+    assign control_target =
+        jump
+            ? jump_target
+            : jump_reg
+                ? jalr_target
+                : branch_taken
+                    ? branch_target
+                    : 32'd0;
+
+    assign instruction_address_misaligned =
+        (jump || jump_reg || branch_taken)
+        && control_target[1:0] != 2'b00;
 
     assign next_pc =
         trap

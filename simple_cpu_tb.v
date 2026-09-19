@@ -24,25 +24,29 @@ module simple_cpu_tb;
 
         #120;
 
+        $display("mepc   = %h", cpu.mepc);
         $display("mcause = %h", cpu.mcause);
         $display("mtval  = %h", cpu.mtval);
         $display("x5     = %h", cpu.rf.registers[5]);
-        $display("x6     = %h", cpu.rf.registers[6]);
+        $display("x7     = %h", cpu.rf.registers[7]);
 
-        if (cpu.mcause !== 32'd2)
-            $fatal(1, "Expected illegal instruction");
+        if (cpu.mepc !== 32'h00000004)
+            $fatal(1, "Expected mepc=00000004, got %h", cpu.mepc);
 
-        if (cpu.mtval !== 32'h023100b3)
+        if (cpu.mcause !== 32'd0)
+            $fatal(1, "Expected instruction-address-misaligned exception");
+
+        if (cpu.mtval !== 32'h00000102)
             $fatal(
                 1,
-                "Expected mtval=023100b3, got %h",
+                "Expected mtval=00000102, got %h",
                 cpu.mtval
             );
 
-        if (cpu.rf.registers[5] !== 32'd2)
-            $fatal(1, "Handler did not read mcause correctly");
+        if (cpu.rf.registers[5] !== 32'd0)
+            $fatal(1, "Misaligned JALR wrote its link register");
 
-        if (cpu.rf.registers[6] !== 32'h023100b3)
+        if (cpu.rf.registers[7] !== 32'h00000102)
             $fatal(
                 1,
                 "Handler did not read mtval correctly"

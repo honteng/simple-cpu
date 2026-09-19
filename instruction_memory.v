@@ -7,19 +7,19 @@ module instruction_memory (
 
 
     initial begin
-        // addi x1, x0, 10
-        memory[0] = 32'h00a00093;
+        // addi x1, x0, 0x103
+        memory[0] = 32'h10300093;
 
-        // unsupported MUL x1, x2, x3
-        memory[1] = 32'h023100b3;
+        // jalr x5, 0(x1)
+        memory[1] = 32'h000082e7;
 
         // handler @ 0x100
 
-        // csrr x5, mcause
-        memory[64] = 32'h342022f3;
+        // csrr x6, mcause
+        memory[64] = 32'h34202373;
 
-        // csrr x6, mtval
-        memory[65] = 32'h34302373;
+        // csrr x7, mtval
+        memory[65] = 32'h343023f3;
 
         // jal x0, 0
         memory[66] = 32'h0000006f;
