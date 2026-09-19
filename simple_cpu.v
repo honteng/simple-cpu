@@ -6,6 +6,7 @@ module simple_cpu (
     wire [31:0] mtvec;
     wire [31:0] mepc;
     wire [31:0] mcause;
+    wire [31:0] mtval;
     wire [31:0] csr_read_data;
     wire [11:0] csr_addr;
     wire [1:0] csr_cmd;
@@ -23,6 +24,7 @@ module simple_cpu (
     wire illegal_alu_instruction;
     wire illegal_instruction_final;
     wire [31:0] trap_cause;
+    wire [31:0] trap_value;
 
     assign csr_addr =
         instruction[31:20];
@@ -242,6 +244,13 @@ module simple_cpu (
         is_ecall                  ? 32'd11 :
                                     32'd0;
 
+    assign trap_value =
+        illegal_instruction_final
+            ? instruction
+            : load_misaligned || store_misaligned
+                ? alu_result
+                : 32'd0;
+
     // CSRRS/CSRRC with rs1 = x0 read the CSR without writing it.
     assign csr_write_enable =
         (csr_cmd == CSR_RW) ||
@@ -256,6 +265,7 @@ module simple_cpu (
         .trap(trap),
         .trap_pc(pc),
         .trap_cause(trap_cause),
+        .trap_value(trap_value),
         .csr_addr(csr_addr),
         .csr_cmd(csr_cmd),
         .csr_write_enable(csr_write_enable),
@@ -263,7 +273,8 @@ module simple_cpu (
         .csr_read_data(csr_read_data),
         .mtvec(mtvec),
         .mepc(mepc),
-        .mcause(mcause)
+        .mcause(mcause),
+        .mtval(mtval)
     );
 
     assign effective_reg_write =

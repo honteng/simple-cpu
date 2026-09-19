@@ -24,22 +24,29 @@ module simple_cpu_tb;
 
         #120;
 
-        $display("mtvec  = %h", cpu.mtvec);
-        $display("mepc   = %h", cpu.mepc);
         $display("mcause = %h", cpu.mcause);
-        $display("x10    = %d", cpu.rf.registers[10]);
+        $display("mtval  = %h", cpu.mtval);
+        $display("x5     = %h", cpu.rf.registers[5]);
+        $display("x6     = %h", cpu.rf.registers[6]);
 
-        if (cpu.mtvec !== 32'h00000180)
-            $fatal(1, "CSRW did not update mtvec: %h", cpu.mtvec);
+        if (cpu.mcause !== 32'd2)
+            $fatal(1, "Expected illegal instruction");
 
-        if (cpu.mepc !== 32'h00000008)
-            $fatal(1, "ECALL mepc should be 0x08: %h", cpu.mepc);
+        if (cpu.mtval !== 32'h023100b3)
+            $fatal(
+                1,
+                "Expected mtval=023100b3, got %h",
+                cpu.mtval
+            );
 
-        if (cpu.mcause !== 32'd11)
-            $fatal(1, "ECALL should set mcause to 11: %h", cpu.mcause);
+        if (cpu.rf.registers[5] !== 32'd2)
+            $fatal(1, "Handler did not read mcause correctly");
 
-        if (cpu.rf.registers[10] !== 32'd1)
-            $fatal(1, "Handler at mtvec was not executed");
+        if (cpu.rf.registers[6] !== 32'h023100b3)
+            $fatal(
+                1,
+                "Handler did not read mtval correctly"
+            );
 
         $display("PASS");
         $finish;
