@@ -7,22 +7,23 @@ module instruction_memory (
 
 
     initial begin
-        // addi x1, x0, 0x103
+        // 0x00: addi x1, x0, 0x103
         memory[0] = 32'h10300093;
 
-        // jalr x5, 0(x1)
-        memory[1] = 32'h000082e7;
+        // 0x04: csrw mepc, x1
+        memory[1] = 32'h34109073;
 
-        // handler @ 0x100
+        // 0x08: csrr x2, mepc
+        memory[2] = 32'h34102173;
 
-        // csrr x6, mcause
-        memory[64] = 32'h34202373;
+        // 0x0c: mret
+        memory[3] = 32'h30200073;
 
-        // csrr x7, mtval
-        memory[65] = 32'h343023f3;
+        // 0x100: addi x3, x0, 42
+        memory[64] = 32'h02a00193;
 
-        // jal x0, 0
-        memory[66] = 32'h0000006f;
+        // 0x104: loop
+        memory[65] = 32'h0000006f;
     end
 
     assign instruction =

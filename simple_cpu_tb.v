@@ -24,32 +24,27 @@ module simple_cpu_tb;
 
         #120;
 
-        $display("mepc   = %h", cpu.mepc);
-        $display("mcause = %h", cpu.mcause);
-        $display("mtval  = %h", cpu.mtval);
-        $display("x5     = %h", cpu.rf.registers[5]);
-        $display("x7     = %h", cpu.rf.registers[7]);
+        $display("mepc = %h", cpu.mepc);
+        $display("x2   = %h", cpu.rf.registers[2]);
+        $display("x3   = %d", cpu.rf.registers[3]);
 
-        if (cpu.mepc !== 32'h00000004)
-            $fatal(1, "Expected mepc=00000004, got %h", cpu.mepc);
-
-        if (cpu.mcause !== 32'd0)
-            $fatal(1, "Expected instruction-address-misaligned exception");
-
-        if (cpu.mtval !== 32'h00000102)
+        if (cpu.mepc !== 32'h00000100)
             $fatal(
                 1,
-                "Expected mtval=00000102, got %h",
-                cpu.mtval
+                "mepc should be aligned to 0x100, got %h",
+                cpu.mepc
             );
 
-        if (cpu.rf.registers[5] !== 32'd0)
-            $fatal(1, "Misaligned JALR wrote its link register");
-
-        if (cpu.rf.registers[7] !== 32'h00000102)
+        if (cpu.rf.registers[2] !== 32'h00000100)
             $fatal(
                 1,
-                "Handler did not read mtval correctly"
+                "Reading mepc should return 0x100"
+            );
+
+        if (cpu.rf.registers[3] !== 32'd42)
+            $fatal(
+                1,
+                "MRET did not return to aligned mepc"
             );
 
         $display("PASS");

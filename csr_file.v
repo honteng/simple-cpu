@@ -53,7 +53,7 @@ module csr_file (
             mcause <= 32'd0;
             mtval  <= 32'd0;
         end else if (trap) begin
-            mepc   <= trap_pc;
+            mepc   <= trap_pc & 32'hfffffffc;
             mcause <= trap_cause;
             mtval  <= trap_value;
         end else if (csr_write_enable) begin
@@ -74,9 +74,16 @@ module csr_file (
                 end
                 CSR_MEPC: begin
                     case (csr_cmd)
-                        CSR_RW: mepc <= csr_write_data;
-                        CSR_RS: mepc <= mepc | csr_write_data;
-                        CSR_RC: mepc <= mepc & ~csr_write_data;
+                        CSR_RW:
+                            mepc <= csr_write_data & 32'hfffffffc;
+                        CSR_RS:
+                            mepc <=
+                                (mepc | csr_write_data)
+                                & 32'hfffffffc;
+                        CSR_RC:
+                            mepc <=
+                                (mepc & ~csr_write_data)
+                                & 32'hfffffffc;
                     endcase
                 end
                 CSR_MCAUSE: begin
