@@ -16,32 +16,13 @@ module simple_cpu (
     wire [31:0] next_pc;
     wire [31:0] instruction;
     wire is_mret;
-    wire is_ecall;
-    wire is_ebreak;
-    wire valid_system_instruction;
-    wire illegal_system_instruction;
     wire illegal_instruction;
     wire illegal_alu_instruction;
-    wire illegal_instruction_final;
     wire [31:0] trap_cause;
     wire [31:0] trap_value;
 
     assign csr_addr =
         instruction[31:20];
-
-    assign is_mret =
-        instruction == 32'h30200073;
-
-    assign is_ecall =
-        instruction == 32'h00000073;
-
-    assign is_ebreak =
-        instruction == 32'h00100073;
-
-    assign valid_system_instruction =
-        is_ecall  ||
-        is_ebreak ||
-        is_mret;
 
     wire [6:0] opcode;
     wire [4:0] rd;
@@ -49,16 +30,6 @@ module simple_cpu (
     wire [4:0] rs2;
     wire [2:0] funct3;
     wire [6:0] funct7;
-
-    assign illegal_system_instruction =
-        opcode == 7'b1110011 &&
-        funct3 == 3'b000 &&
-        !valid_system_instruction;
-
-    assign illegal_instruction_final =
-        illegal_instruction         ||
-        illegal_system_instruction  ||
-        illegal_alu_instruction;
 
     wire [31:0] imm_i;
     wire [31:0] imm_s;
@@ -231,31 +202,28 @@ module simple_cpu (
     assign store_misaligned =
         store_access && mem_misaligned;
 
-    assign trap =
-        instruction_address_misaligned ||
-        illegal_instruction_final      ||
-        load_misaligned                ||
-        store_misaligned               ||
-        is_ecall                       ||
-        is_ebreak;
+    trap_controller trap_ctl (
+        .instruction(instruction),
+        .opcode(opcode),
+        .funct3(funct3),
 
-    assign trap_cause =
-        instruction_address_misaligned ? 32'd0  :
-        illegal_instruction_final      ? 32'd2  :
-        is_ebreak                      ? 32'd3  :
-        load_misaligned                ? 32'd4  :
-        store_misaligned               ? 32'd6  :
-        is_ecall                       ? 32'd11 :
-                                        32'd0;
+        .illegal_instruction(illegal_instruction),
+        .illegal_alu_instruction(illegal_alu_instruction),
 
-    assign trap_value =
-        instruction_address_misaligned
-            ? control_target
-            : illegal_instruction_final
-                ? instruction
-                : load_misaligned || store_misaligned
-                    ? alu_result
-                    : 32'd0;
+        .instruction_address_misaligned(
+            instruction_address_misaligned
+        ),
+        .control_target(control_target),
+
+        .load_misaligned(load_misaligned),
+        .store_misaligned(store_misaligned),
+        .memory_address(alu_result),
+
+        .is_mret(is_mret),
+        .trap(trap),
+        .trap_cause(trap_cause),
+        .trap_value(trap_value)
+    );
 
     // CSRRS/CSRRC with rs1 = x0 read the CSR without writing it.
     assign csr_write_enable =
