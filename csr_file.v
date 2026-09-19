@@ -12,6 +12,7 @@ module csr_file (
     input  wire [31:0] csr_write_data,
 
     output reg  [31:0] csr_read_data,
+    output reg  [31:0] mtvec,
     output reg  [31:0] mepc,
     output reg  [31:0] mcause
 );
@@ -21,12 +22,15 @@ module csr_file (
     localparam CSR_RS   = 2'b10;
     localparam CSR_RC   = 2'b11;
 
+    localparam CSR_MTVEC  = 12'h305;
     localparam CSR_MEPC   = 12'h341;
     localparam CSR_MCAUSE = 12'h342;
 
     // CSR read
     always @(*) begin
         case (csr_addr)
+            CSR_MTVEC:
+                csr_read_data = mtvec;
             CSR_MEPC:
                 csr_read_data = mepc;
             CSR_MCAUSE:
@@ -39,6 +43,7 @@ module csr_file (
     // CSR write
     always @(posedge clk) begin
         if (reset) begin
+            mtvec  <= 32'h00000100;
             mepc   <= 32'd0;
             mcause <= 32'd0;
         end else if (trap) begin
@@ -46,6 +51,20 @@ module csr_file (
             mcause <= trap_cause;
         end else if (csr_write_enable) begin
             case (csr_addr)
+                CSR_MTVEC: begin
+                    case (csr_cmd)
+                        CSR_RW:
+                            mtvec <= csr_write_data & 32'hfffffffc;
+                        CSR_RS:
+                            mtvec <=
+                                (mtvec | csr_write_data)
+                                & 32'hfffffffc;
+                        CSR_RC:
+                            mtvec <=
+                                (mtvec & ~csr_write_data)
+                                & 32'hfffffffc;
+                    endcase
+                end
                 CSR_MEPC: begin
                     case (csr_cmd)
                         CSR_RW: mepc <= csr_write_data;

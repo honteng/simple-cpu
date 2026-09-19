@@ -24,30 +24,22 @@ module simple_cpu_tb;
 
         #120;
 
+        $display("mtvec  = %h", cpu.mtvec);
         $display("mepc   = %h", cpu.mepc);
         $display("mcause = %h", cpu.mcause);
-        $display("x1     = %d", cpu.rf.registers[1]);
-        $display("x2     = %d", cpu.rf.registers[2]);
-        $display("x5     = %d", cpu.rf.registers[5]);
-        $display("x6     = %h", cpu.rf.registers[6]);
+        $display("x10    = %d", cpu.rf.registers[10]);
 
-        if (cpu.mcause !== 32'd2)
-            $fatal(1, "Illegal instruction should set mcause to 2: %h", cpu.mcause);
+        if (cpu.mtvec !== 32'h00000180)
+            $fatal(1, "CSRW did not update mtvec: %h", cpu.mtvec);
 
         if (cpu.mepc !== 32'h00000008)
-            $fatal(1, "Handler should advance mepc to 0x08: %h", cpu.mepc);
+            $fatal(1, "ECALL mepc should be 0x08: %h", cpu.mepc);
 
-        if (cpu.rf.registers[1] !== 32'd10)
-            $fatal(1, "Illegal R-type instruction wrote to its destination");
+        if (cpu.mcause !== 32'd11)
+            $fatal(1, "ECALL should set mcause to 11: %h", cpu.mcause);
 
-        if (cpu.rf.registers[2] !== 32'd42)
-            $fatal(1, "Execution did not resume after illegal instruction");
-
-        if (cpu.rf.registers[5] !== 32'd2)
-            $fatal(1, "Handler did not read illegal-instruction mcause");
-
-        if (cpu.rf.registers[6] !== 32'h00000008)
-            $fatal(1, "Handler did not calculate mepc + 4");
+        if (cpu.rf.registers[10] !== 32'd1)
+            $fatal(1, "Handler at mtvec was not executed");
 
         $display("PASS");
         $finish;

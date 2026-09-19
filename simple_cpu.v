@@ -3,6 +3,7 @@ module simple_cpu (
     input wire reset
 );
 
+    wire [31:0] mtvec;
     wire [31:0] mepc;
     wire [31:0] mcause;
     wire [31:0] csr_read_data;
@@ -126,8 +127,6 @@ module simple_cpu (
     localparam IMM_B = 3'b010;
     localparam IMM_U = 3'b011;
     localparam IMM_J = 3'b100;
-
-    localparam TRAP_VECTOR = 32'h00000100;
 
     program_counter pc0 (
         .clk(clk),
@@ -262,6 +261,7 @@ module simple_cpu (
         .csr_write_enable(csr_write_enable),
         .csr_write_data(read_data1),
         .csr_read_data(csr_read_data),
+        .mtvec(mtvec),
         .mepc(mepc),
         .mcause(mcause)
     );
@@ -325,7 +325,7 @@ module simple_cpu (
 
     assign next_pc =
         trap
-            ? TRAP_VECTOR
+            ? mtvec
             : is_mret
                 ? mepc
                 : jump
