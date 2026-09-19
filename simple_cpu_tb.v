@@ -38,7 +38,7 @@ module simple_cpu_tb;
             $fatal(1, "Handler should advance mepc to 0x08: %h", cpu.mepc);
 
         if (cpu.rf.registers[1] !== 32'd10)
-            $fatal(1, "Instruction before ECALL did not execute");
+            $fatal(1, "Illegal R-type instruction wrote to its destination");
 
         if (cpu.rf.registers[2] !== 32'd42)
             $fatal(1, "Execution did not resume after illegal instruction");

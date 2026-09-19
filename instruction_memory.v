@@ -10,8 +10,9 @@ module instruction_memory (
         // 0x00: addi x1, x0, 10
         memory[0] = 32'h00a00093;
 
-        // 0x04: illegal instruction
-        memory[1] = 32'h00000000;
+        // 0x04: unsupported R-type instruction (MUL x1, x2, x3)
+        // RV32M is not implemented, so funct7=0000001 is illegal.
+        memory[1] = 32'h023100b3;
 
         // 0x08: executed after returning from the handler
         // addi x2, x0, 42

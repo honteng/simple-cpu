@@ -2,7 +2,8 @@ module alu_control (
 	input wire [6:0] opcode,
 	input wire [2:0] funct3,
 	input wire [6:0] funct7,
-	output reg [3:0] alu_op
+	output reg [3:0] alu_op,
+	output reg illegal_alu_instruction
 );
 
 	localparam ALU_ADD  = 4'b0000;
@@ -19,54 +20,94 @@ module alu_control (
 	always @(*) begin
 		// default: ADD
 		alu_op = ALU_ADD;
+		illegal_alu_instruction = 0;
 
 		case (opcode)
 		 // R-type instructions
 			7'b0110011: begin // R-type
+				illegal_alu_instruction = 1;
 				case (funct3)
 					3'b000: begin
-                                                if (funct7 == 7'b0100000)
-                                                    alu_op = ALU_SUB;
-                                                else
-                                                    alu_op = ALU_ADD;
+						if (funct7 == 7'b0000000) begin
+							alu_op = ALU_ADD;
+							illegal_alu_instruction = 0;
+						end else if (funct7 == 7'b0100000) begin
+							alu_op = ALU_SUB;
+							illegal_alu_instruction = 0;
+						end
 					end
-					3'b111: alu_op = ALU_AND;
-					3'b110: alu_op = ALU_OR;
-					3'b100: alu_op = ALU_XOR;
-					3'b010: alu_op = ALU_SLT;
-					3'b011: alu_op = ALU_SLTU;
-					3'b001: alu_op = ALU_SLL;
+					3'b001: begin
+						if (funct7 == 7'b0000000) begin
+							alu_op = ALU_SLL;
+							illegal_alu_instruction = 0;
+						end
+					end
+					3'b010: begin
+						if (funct7 == 7'b0000000) begin
+							alu_op = ALU_SLT;
+							illegal_alu_instruction = 0;
+						end
+					end
+					3'b011: begin
+						if (funct7 == 7'b0000000) begin
+							alu_op = ALU_SLTU;
+							illegal_alu_instruction = 0;
+						end
+					end
+					3'b100: begin
+						if (funct7 == 7'b0000000) begin
+							alu_op = ALU_XOR;
+							illegal_alu_instruction = 0;
+						end
+					end
 					3'b101: begin
-						if (funct7 == 7'b0100000)
-							alu_op = ALU_SRA;
-						else
+						if (funct7 == 7'b0000000) begin
 							alu_op = ALU_SRL;
+							illegal_alu_instruction = 0;
+						end else if (funct7 == 7'b0100000) begin
+							alu_op = ALU_SRA;
+							illegal_alu_instruction = 0;
+						end
 					end
-					default:
-						alu_op = ALU_ADD;
+					3'b110: begin
+						if (funct7 == 7'b0000000) begin
+							alu_op = ALU_OR;
+							illegal_alu_instruction = 0;
+						end
+					end
+					3'b111: begin
+						if (funct7 == 7'b0000000) begin
+							alu_op = ALU_AND;
+							illegal_alu_instruction = 0;
+						end
+					end
 				endcase
 			end
 
 			// I-type ALU instructions
 			7'b0010011: begin
+				illegal_alu_instruction = 0;
 				case (funct3)
 					3'b000: alu_op = ALU_ADD; // ADDI
-					3'b001: begin
-						if (funct7 == 7'b0000000)
-							alu_op = ALU_SLL; // SLLI
-					end
 					3'b010: alu_op = ALU_SLT; // SLTI
 					3'b011: alu_op = ALU_SLTU; // SLTIU
 					3'b100: alu_op = ALU_XOR; // XORI
-					3'b101: begin
-						if (funct7 == 7'b0100000)
-							alu_op = ALU_SRA; // SRAI
-						else
-							alu_op = ALU_SRL; // SRLI
-					end
 					3'b110: alu_op = ALU_OR; // ORI
 					3'b111: alu_op = ALU_AND; // ANDI
-					default: alu_op = ALU_ADD;
+					3'b001: begin
+						if (funct7 == 7'b0000000)
+							alu_op = ALU_SLL; // SLLI
+						else
+							illegal_alu_instruction = 1;
+					end
+					3'b101: begin
+						if (funct7 == 7'b0000000)
+							alu_op = ALU_SRL; // SRLI
+						else if (funct7 == 7'b0100000)
+							alu_op = ALU_SRA; // SRAI
+						else
+							illegal_alu_instruction = 1;
+					end
 				endcase
 			end
 

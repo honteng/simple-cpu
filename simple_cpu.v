@@ -19,6 +19,7 @@ module simple_cpu (
     wire valid_system_instruction;
     wire illegal_system_instruction;
     wire illegal_instruction;
+    wire illegal_alu_instruction;
     wire illegal_instruction_final;
     wire [31:0] trap_cause;
 
@@ -52,8 +53,9 @@ module simple_cpu (
         !valid_system_instruction;
 
     assign illegal_instruction_final =
-        illegal_instruction ||
-        illegal_system_instruction;
+        illegal_instruction         ||
+        illegal_system_instruction  ||
+        illegal_alu_instruction;
 
     wire [31:0] imm_i;
     wire [31:0] imm_s;
@@ -78,6 +80,7 @@ module simple_cpu (
     wire reg_write;
     wire effective_reg_write;
     wire mem_write;
+    wire effective_mem_write;
     wire mem_misaligned;
     wire load_access;
     wire store_access;
@@ -191,7 +194,8 @@ module simple_cpu (
         .opcode(opcode),
         .funct3(funct3),
         .funct7(funct7),
-        .alu_op(alu_op)
+        .alu_op(alu_op),
+        .illegal_alu_instruction(illegal_alu_instruction)
     );
 
     alu alu0 (
@@ -203,7 +207,7 @@ module simple_cpu (
 
     data_memory dmem (
         .clk(clk),
-        .mem_write(mem_write),
+        .mem_write(effective_mem_write),
         .mem_size(mem_size),
         .load_unsigned(load_unsigned),
         .address(alu_result),
@@ -264,6 +268,9 @@ module simple_cpu (
 
     assign effective_reg_write =
         reg_write && !trap;
+
+    assign effective_mem_write =
+        mem_write && !trap;
 
     always @(*) begin
         case (imm_sel)
