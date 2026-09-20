@@ -3,6 +3,7 @@ module simple_cpu (
     input wire reset
 );
 
+    wire [31:0] mstatus;
     wire [31:0] mtvec;
     wire [31:0] mepc;
     wire [31:0] mcause;
@@ -256,11 +257,13 @@ module simple_cpu (
         .trap_pc(pc),
         .trap_cause(trap_cause),
         .trap_value(trap_value),
+        .is_mret(is_mret),
         .csr_addr(csr_addr),
         .csr_cmd(csr_cmd),
         .csr_write_enable(csr_write_enable),
         .csr_write_data(read_data1),
         .csr_read_data(csr_read_data),
+        .mstatus(mstatus),
         .mtvec(mtvec),
         .mepc(mepc),
         .mcause(mcause),

@@ -6,6 +6,7 @@ module csr_file (
     input  wire [31:0] trap_pc,
     input  wire [31:0] trap_cause,
     input  wire [31:0] trap_value,
+    input  wire        is_mret,
 
     input  wire [11:0] csr_addr,
     input  wire [1:0]  csr_cmd,
@@ -13,6 +14,7 @@ module csr_file (
     input  wire [31:0] csr_write_data,
 
     output reg  [31:0] csr_read_data,
+    output reg  [31:0] mstatus,
     output reg  [31:0] mtvec,
     output reg  [31:0] mepc,
     output reg  [31:0] mcause,
@@ -24,40 +26,65 @@ module csr_file (
     localparam CSR_RS   = 2'b10;
     localparam CSR_RC   = 2'b11;
 
-    localparam CSR_MTVEC  = 12'h305;
-    localparam CSR_MEPC   = 12'h341;
-    localparam CSR_MCAUSE = 12'h342;
-    localparam CSR_MTVAL  = 12'h343;
+    localparam CSR_MSTATUS = 12'h300;
+    localparam CSR_MTVEC   = 12'h305;
+    localparam CSR_MEPC    = 12'h341;
+    localparam CSR_MCAUSE  = 12'h342;
+    localparam CSR_MTVAL   = 12'h343;
+
+    localparam MSTATUS_MIE  = 32'h00000008; // bit 3
+    localparam MSTATUS_MPIE = 32'h00000080; // bit 7
+    localparam MSTATUS_MASK = MSTATUS_MIE | MSTATUS_MPIE;
 
     // CSR read
     always @(*) begin
         case (csr_addr)
-            CSR_MTVEC:
-                csr_read_data = mtvec;
-            CSR_MEPC:
-                csr_read_data = mepc;
-            CSR_MCAUSE:
-                csr_read_data = mcause;
-            CSR_MTVAL:
-                csr_read_data = mtval;
-            default:
-                csr_read_data = 32'd0;
+            CSR_MSTATUS: csr_read_data = mstatus;
+            CSR_MTVEC:   csr_read_data = mtvec;
+            CSR_MEPC:    csr_read_data = mepc;
+            CSR_MCAUSE:  csr_read_data = mcause;
+            CSR_MTVAL:   csr_read_data = mtval;
+            default:     csr_read_data = 32'd0;
         endcase
     end
 
     // CSR write
     always @(posedge clk) begin
         if (reset) begin
-            mtvec  <= 32'h00000100;
-            mepc   <= 32'd0;
-            mcause <= 32'd0;
-            mtval  <= 32'd0;
+            mstatus <= 32'd0;
+            mtvec   <= 32'h00000100;
+            mepc    <= 32'd0;
+            mcause  <= 32'd0;
+            mtval   <= 32'd0;
         end else if (trap) begin
             mepc   <= trap_pc & 32'hfffffffc;
             mcause <= trap_cause;
             mtval  <= trap_value;
+
+            // MPIE <- MIE, MIE <- 0
+            mstatus[7] <= mstatus[3];
+            mstatus[3] <= 1'b0;
+        end else if (is_mret) begin
+            // MIE <- MPIE, MPIE <- 1
+            mstatus[3] <= mstatus[7];
+            mstatus[7] <= 1'b1;
         end else if (csr_write_enable) begin
             case (csr_addr)
+                CSR_MSTATUS: begin
+                    case (csr_cmd)
+                        CSR_RW:
+                            mstatus <=
+                                csr_write_data & MSTATUS_MASK;
+                        CSR_RS:
+                            mstatus <=
+                                (mstatus | csr_write_data)
+                                & MSTATUS_MASK;
+                        CSR_RC:
+                            mstatus <=
+                                (mstatus & ~csr_write_data)
+                                & MSTATUS_MASK;
+                    endcase
+                end
                 CSR_MTVEC: begin
                     case (csr_cmd)
                         CSR_RW:

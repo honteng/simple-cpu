@@ -24,27 +24,28 @@ module simple_cpu_tb;
 
         #120;
 
-        $display("mepc = %h", cpu.mepc);
-        $display("x2   = %h", cpu.rf.registers[2]);
-        $display("x3   = %d", cpu.rf.registers[3]);
+        $display("mstatus = %h", cpu.mstatus);
+        $display("x2      = %h", cpu.rf.registers[2]);
+        $display("x3      = %d", cpu.rf.registers[3]);
 
-        if (cpu.mepc !== 32'h00000100)
+        if (cpu.rf.registers[2] !== 32'h00000080)
             $fatal(
                 1,
-                "mepc should be aligned to 0x100, got %h",
-                cpu.mepc
+                "Handler should observe mstatus=0x80, got %h",
+                cpu.rf.registers[2]
             );
 
-        if (cpu.rf.registers[2] !== 32'h00000100)
+        if (cpu.mstatus !== 32'h00000088)
             $fatal(
                 1,
-                "Reading mepc should return 0x100"
+                "MRET should restore mstatus to 0x88, got %h",
+                cpu.mstatus
             );
 
         if (cpu.rf.registers[3] !== 32'd42)
             $fatal(
                 1,
-                "MRET did not return to aligned mepc"
+                "Execution did not resume after MRET"
             );
 
         $display("PASS");
