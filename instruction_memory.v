@@ -34,11 +34,14 @@ module instruction_memory (
 
         // Interrupt handler @ 0x100
 
+        // csrr x5, mip
+        memory[64] = 32'h344022f3;
+
         // addi x10, x0, 1
-        memory[64] = 32'h00100513;
+        memory[65] = 32'h00100513;
 
         // loop
-        memory[65] = 32'h0000006f;
+        memory[66] = 32'h0000006f;
     end
 
     assign instruction =

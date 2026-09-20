@@ -6,6 +6,7 @@ module simple_cpu (
 
     wire [31:0] mstatus;
     wire [31:0] mie;
+    wire [31:0] mip;
     wire [31:0] mtvec;
     wire [31:0] mepc;
     wire [31:0] mcause;
@@ -223,11 +224,13 @@ module simple_cpu (
         .trap_value(exception_value)
     );
 
-    interrupt_controller interrupt_ctl (
-        .external_irq(external_irq),
+    interrupt_controller irq_ctl (
         .mstatus(mstatus),
         .mie(mie),
+        .mip(mip),
+
         .exception_trap(exception_trap),
+
         .take_interrupt(take_interrupt),
         .interrupt_cause(interrupt_cause)
     );
@@ -296,6 +299,7 @@ module simple_cpu (
         .trap_cause(final_trap_cause),
         .trap_value(final_trap_value),
         .is_mret(is_mret),
+        .external_irq(external_irq),
         .csr_addr(csr_addr),
         .csr_cmd(csr_cmd),
         .csr_write_enable(csr_write_enable),
@@ -306,7 +310,8 @@ module simple_cpu (
         .mtvec(mtvec),
         .mepc(mepc),
         .mcause(mcause),
-        .mtval(mtval)
+        .mtval(mtval),
+        .mip(mip)
     );
 
     assign effective_reg_write =

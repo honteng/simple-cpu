@@ -1,8 +1,7 @@
 module interrupt_controller (
-    input wire external_irq,
-
     input wire [31:0] mstatus,
     input wire [31:0] mie,
+    input wire [31:0] mip,
 
     input wire exception_trap,
 
@@ -12,6 +11,7 @@ module interrupt_controller (
 
     wire global_interrupt_enable;
     wire external_interrupt_enable;
+    wire external_interrupt_pending;
 
     assign global_interrupt_enable =
         mstatus[3]; // MIE
@@ -19,10 +19,13 @@ module interrupt_controller (
     assign external_interrupt_enable =
         mie[11]; // MEIE
 
+    assign external_interrupt_pending =
+        mip[11]; // MEIP
+
     assign take_interrupt =
-        external_irq              &&
         global_interrupt_enable   &&
         external_interrupt_enable &&
+        external_interrupt_pending &&
         !exception_trap;
 
     // bit 31 = interrupt

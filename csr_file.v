@@ -7,6 +7,7 @@ module csr_file (
     input  wire [31:0] trap_cause,
     input  wire [31:0] trap_value,
     input  wire        is_mret,
+    input  wire        external_irq,
 
     input  wire [11:0] csr_addr,
     input  wire [1:0]  csr_cmd,
@@ -19,7 +20,8 @@ module csr_file (
     output reg  [31:0] mtvec,
     output reg  [31:0] mepc,
     output reg  [31:0] mcause,
-    output reg  [31:0] mtval
+    output reg  [31:0] mtval,
+    output wire [31:0] mip
 );
 
     localparam CSR_NONE = 2'b00;
@@ -33,12 +35,19 @@ module csr_file (
     localparam CSR_MEPC    = 12'h341;
     localparam CSR_MCAUSE  = 12'h342;
     localparam CSR_MTVAL   = 12'h343;
+    localparam CSR_MIP     = 12'h344;
 
     localparam MSTATUS_MIE  = 32'h00000008; // bit 3
     localparam MSTATUS_MPIE = 32'h00000080; // bit 7
     localparam MSTATUS_MASK = MSTATUS_MIE | MSTATUS_MPIE;
 
     localparam MIE_MEIE = 32'h00000800; // bit 11
+    localparam MIP_MEIP = 32'h00000800;
+
+    assign mip =
+        external_irq
+            ? MIP_MEIP
+            : 32'd0;
 
     // CSR read
     always @(*) begin
@@ -49,6 +58,7 @@ module csr_file (
             CSR_MEPC:    csr_read_data = mepc;
             CSR_MCAUSE:  csr_read_data = mcause;
             CSR_MTVAL:   csr_read_data = mtval;
+            CSR_MIP:     csr_read_data = mip;
             default:     csr_read_data = 32'd0;
         endcase
     end
