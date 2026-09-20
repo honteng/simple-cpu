@@ -13,24 +13,20 @@ module instruction_memory (
         // 0x04: csrw mstatus, x1
         memory[1] = 32'h30009073;
 
-        // 0x08: lui x2, 1
-        memory[2] = 32'h00001137;
+        // 0x08: addi x2, x0, 0x80
+        memory[2] = 32'h08000113;
 
-        // 0x0c: addi x2, x2, -2048
-        // x2 = 0x800
-        memory[3] = 32'h80010113;
+        // 0x0c: csrw mie, x2
+        memory[3] = 32'h30411073;
 
-        // 0x10: csrw mie, x2
-        memory[4] = 32'h30411073;
+        // 0x10: addi x3, x0, 42
+        memory[4] = 32'h02a00193;
 
-        // 0x14: addi x3, x0, 42
-        memory[5] = 32'h02a00193;
+        // 0x14: addi x4, x0, 77
+        memory[5] = 32'h04d00213;
 
-        // 0x18: addi x4, x0, 77
-        memory[6] = 32'h04d00213;
-
-        // 0x1c: loop
-        memory[7] = 32'h0000006f;
+        // 0x18: loop
+        memory[6] = 32'h0000006f;
 
         // Interrupt handler @ 0x100
 

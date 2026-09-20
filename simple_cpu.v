@@ -1,7 +1,8 @@
 module simple_cpu (
     input wire clk,
     input wire reset,
-    input wire external_irq
+    input wire external_irq,
+    input wire timer_irq
 );
 
     wire [31:0] mstatus;
@@ -300,6 +301,7 @@ module simple_cpu (
         .trap_value(final_trap_value),
         .is_mret(is_mret),
         .external_irq(external_irq),
+        .timer_irq(timer_irq),
         .csr_addr(csr_addr),
         .csr_cmd(csr_cmd),
         .csr_write_enable(csr_write_enable),

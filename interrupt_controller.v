@@ -9,28 +9,31 @@ module interrupt_controller (
     output wire [31:0] interrupt_cause
 );
 
-    wire global_interrupt_enable;
-    wire external_interrupt_enable;
     wire external_interrupt_pending;
-
-    assign global_interrupt_enable =
-        mstatus[3]; // MIE
-
-    assign external_interrupt_enable =
-        mie[11]; // MEIE
+    wire timer_interrupt_pending;
 
     assign external_interrupt_pending =
-        mip[11]; // MEIP
+        mstatus[3] &&
+        mie[11] &&
+        mip[11];
+
+    assign timer_interrupt_pending =
+        mstatus[3] &&
+        mie[7] &&
+        mip[7];
 
     assign take_interrupt =
-        global_interrupt_enable   &&
-        external_interrupt_enable &&
-        external_interrupt_pending &&
-        !exception_trap;
+        !exception_trap &&
+        (
+            external_interrupt_pending ||
+            timer_interrupt_pending
+        );
 
-    // bit 31 = interrupt
-    // code 11 = Machine External Interrupt
     assign interrupt_cause =
-        32'h8000000b;
+        external_interrupt_pending
+            ? 32'h8000000b
+            : timer_interrupt_pending
+                ? 32'h80000007
+                : 32'd0;
 
 endmodule

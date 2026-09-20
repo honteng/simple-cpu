@@ -5,11 +5,13 @@ module simple_cpu_tb;
     reg clk;
     reg reset;
     reg external_irq;
+    reg timer_irq;
 
     simple_cpu cpu (
         .clk(clk),
         .reset(reset),
-        .external_irq(external_irq)
+        .external_irq(external_irq),
+        .timer_irq(timer_irq)
     );
 
     always #5 clk = ~clk;
@@ -20,7 +22,8 @@ module simple_cpu_tb;
 
         clk = 0;
         reset = 1;
-        external_irq = 1;
+        external_irq = 0;
+        timer_irq = 1;
 
         #6;
         reset = 0;
@@ -46,13 +49,13 @@ module simple_cpu_tb;
         if (cpu.rf.registers[4] !== 32'd0)
             $fatal(1, "Instruction after interrupt was executed");
 
-        if (cpu.mepc !== 32'h00000018)
-            $fatal(1, "Expected mepc=0x18, got %h", cpu.mepc);
+        if (cpu.mepc !== 32'h00000014)
+            $fatal(1, "Expected mepc=0x14, got %h", cpu.mepc);
 
-        if (cpu.mcause !== 32'h8000000b)
+        if (cpu.mcause !== 32'h80000007)
             $fatal(
                 1,
-                "Expected machine external interrupt, got %h",
+                "Expected machine timer interrupt, got %h",
                 cpu.mcause
             );
 
@@ -62,11 +65,11 @@ module simple_cpu_tb;
         if (cpu.mstatus !== 32'h00000080)
             $fatal(1, "Trap should set MPIE=1 and MIE=0");
 
-        if (cpu.mip !== 32'h00000800)
-            $fatal(1, "External IRQ should set mip.MEIP");
+        if (cpu.mip !== 32'h00000080)
+            $fatal(1, "Timer IRQ should set mip.MTIP");
 
-        if (cpu.rf.registers[5] !== 32'h00000800)
-            $fatal(1, "Handler did not read mip.MEIP");
+        if (cpu.rf.registers[5] !== 32'h00000080)
+            $fatal(1, "Handler did not read mip.MTIP");
 
         if (cpu.rf.registers[10] !== 32'd1)
             $fatal(1, "Interrupt handler was not executed");

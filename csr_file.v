@@ -8,6 +8,7 @@ module csr_file (
     input  wire [31:0] trap_value,
     input  wire        is_mret,
     input  wire        external_irq,
+    input  wire        timer_irq,
 
     input  wire [11:0] csr_addr,
     input  wire [1:0]  csr_cmd,
@@ -41,13 +42,19 @@ module csr_file (
     localparam MSTATUS_MPIE = 32'h00000080; // bit 7
     localparam MSTATUS_MASK = MSTATUS_MIE | MSTATUS_MPIE;
 
+    localparam MIE_MTIE = 32'h00000080; // bit 7
     localparam MIE_MEIE = 32'h00000800; // bit 11
-    localparam MIP_MEIP = 32'h00000800;
+
+    localparam MIP_MTIP = 32'h00000080; // bit 7
+    localparam MIP_MEIP = 32'h00000800; // bit 11
+
+    localparam MIE_MASK =
+        MIE_MTIE |
+        MIE_MEIE;
 
     assign mip =
-        external_irq
-            ? MIP_MEIP
-            : 32'd0;
+        (external_irq ? MIP_MEIP : 32'd0) |
+        (timer_irq    ? MIP_MTIP : 32'd0);
 
     // CSR read
     always @(*) begin
@@ -104,13 +111,13 @@ module csr_file (
                 CSR_MIE: begin
                     case (csr_cmd)
                         CSR_RW:
-                            mie <= csr_write_data & MIE_MEIE;
+                            mie <= csr_write_data & MIE_MASK;
                         CSR_RS:
                             mie <= (mie | csr_write_data)
-                                   & MIE_MEIE;
+                                   & MIE_MASK;
                         CSR_RC:
                             mie <= (mie & ~csr_write_data)
-                                   & MIE_MEIE;
+                                   & MIE_MASK;
                     endcase
                 end
                 CSR_MTVEC: begin
