@@ -48,8 +48,6 @@ module simple_cpu (
     wire [31:0] memory_read_data;
     reg [31:0] write_back_data;
     wire [31:0] auipc_result;
-    wire [31:0] jump_target;
-    wire [31:0] jalr_target;
     wire [31:0] control_target;
     wire instruction_address_misaligned;
 
@@ -73,17 +71,7 @@ module simple_cpu (
     wire jump_reg;
     wire [2:0] branch_type;
 
-    reg branch_condition;
-    wire branch_taken;
-
     wire [31:0] pc_plus_4;
-    wire [31:0] branch_target;
-
-    localparam BR_NONE = 3'b000;
-    localparam BR_EQ   = 3'b001;
-    localparam BR_NE   = 3'b010;
-    localparam BR_LT   = 3'b011;
-    localparam BR_GE   = 3'b100;
 
     localparam WB_ALU   = 3'b000;
     localparam WB_MEM   = 3'b001;
@@ -225,6 +213,34 @@ module simple_cpu (
         .trap_value(trap_value)
     );
 
+    control_flow_unit flow (
+        .pc(pc),
+        .immediate(immediate),
+
+        .read_data1(read_data1),
+        .read_data2(read_data2),
+        .alu_result(alu_result),
+
+        .branch(branch),
+        .jump(jump),
+        .jump_reg(jump_reg),
+        .branch_type(branch_type),
+
+        .trap(trap),
+        .mtvec(mtvec),
+
+        .is_mret(is_mret),
+        .mepc(mepc),
+
+        .next_pc(next_pc),
+        .pc_plus_4(pc_plus_4),
+
+        .control_target(control_target),
+        .instruction_address_misaligned(
+            instruction_address_misaligned
+        )
+    );
+
     // CSRRS/CSRRC with rs1 = x0 read the CSR without writing it.
     assign csr_write_enable =
         (csr_cmd == CSR_RW) ||
@@ -280,58 +296,5 @@ module simple_cpu (
             default:  write_back_data = alu_result;
         endcase
     end
-
-    always @(*) begin
-        case (branch_type)
-            BR_EQ:
-                branch_condition = read_data1 == read_data2;
-            BR_NE:
-                branch_condition = read_data1 != read_data2;
-            BR_LT:
-                branch_condition = $signed(read_data1) < $signed(read_data2);
-            BR_GE:
-                branch_condition = $signed(read_data1) >= $signed(read_data2);
-            default:
-                branch_condition = 0;
-        endcase
-    end
-
-    assign branch_taken =
-        branch && branch_condition;
-
-    assign pc_plus_4 =
-        pc + 32'd4;
-
-    assign branch_target =
-        pc + immediate;
-
-    assign jump_target = pc + immediate;
-    assign jalr_target = {alu_result[31:1], 1'b0};
-
-    assign control_target =
-        jump
-            ? jump_target
-            : jump_reg
-                ? jalr_target
-                : branch_taken
-                    ? branch_target
-                    : 32'd0;
-
-    assign instruction_address_misaligned =
-        (jump || jump_reg || branch_taken)
-        && control_target[1:0] != 2'b00;
-
-    assign next_pc =
-        trap
-            ? mtvec
-            : is_mret
-                ? mepc
-                : jump
-                    ? jump_target
-                    : jump_reg
-                        ? jalr_target
-                        : branch_taken
-                            ? branch_target
-                            : pc_plus_4;
 
 endmodule
