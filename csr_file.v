@@ -15,6 +15,7 @@ module csr_file (
 
     output reg  [31:0] csr_read_data,
     output reg  [31:0] mstatus,
+    output reg  [31:0] mie,
     output reg  [31:0] mtvec,
     output reg  [31:0] mepc,
     output reg  [31:0] mcause,
@@ -27,6 +28,7 @@ module csr_file (
     localparam CSR_RC   = 2'b11;
 
     localparam CSR_MSTATUS = 12'h300;
+    localparam CSR_MIE     = 12'h304;
     localparam CSR_MTVEC   = 12'h305;
     localparam CSR_MEPC    = 12'h341;
     localparam CSR_MCAUSE  = 12'h342;
@@ -36,10 +38,13 @@ module csr_file (
     localparam MSTATUS_MPIE = 32'h00000080; // bit 7
     localparam MSTATUS_MASK = MSTATUS_MIE | MSTATUS_MPIE;
 
+    localparam MIE_MEIE = 32'h00000800; // bit 11
+
     // CSR read
     always @(*) begin
         case (csr_addr)
             CSR_MSTATUS: csr_read_data = mstatus;
+            CSR_MIE:     csr_read_data = mie;
             CSR_MTVEC:   csr_read_data = mtvec;
             CSR_MEPC:    csr_read_data = mepc;
             CSR_MCAUSE:  csr_read_data = mcause;
@@ -52,6 +57,7 @@ module csr_file (
     always @(posedge clk) begin
         if (reset) begin
             mstatus <= 32'd0;
+            mie     <= 32'd0;
             mtvec   <= 32'h00000100;
             mepc    <= 32'd0;
             mcause  <= 32'd0;
@@ -83,6 +89,18 @@ module csr_file (
                             mstatus <=
                                 (mstatus & ~csr_write_data)
                                 & MSTATUS_MASK;
+                    endcase
+                end
+                CSR_MIE: begin
+                    case (csr_cmd)
+                        CSR_RW:
+                            mie <= csr_write_data & MIE_MEIE;
+                        CSR_RS:
+                            mie <= (mie | csr_write_data)
+                                   & MIE_MEIE;
+                        CSR_RC:
+                            mie <= (mie & ~csr_write_data)
+                                   & MIE_MEIE;
                     endcase
                 end
                 CSR_MTVEC: begin

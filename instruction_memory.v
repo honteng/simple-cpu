@@ -13,31 +13,32 @@ module instruction_memory (
         // 0x04: csrw mstatus, x1
         memory[1] = 32'h30009073;
 
-        // 0x08: ecall
-        memory[2] = 32'h00000073;
+        // 0x08: lui x2, 1
+        memory[2] = 32'h00001137;
 
-        // 0x0c: addi x3, x0, 42
-        memory[3] = 32'h02a00193;
+        // 0x0c: addi x2, x2, -2048
+        // x2 = 0x800
+        memory[3] = 32'h80010113;
 
-        // 0x10: loop
-        memory[4] = 32'h0000006f;
+        // 0x10: csrw mie, x2
+        memory[4] = 32'h30411073;
 
-        // Trap handler @ 0x100
+        // 0x14: addi x3, x0, 42
+        memory[5] = 32'h02a00193;
 
-        // csrr x2, mstatus
-        memory[64] = 32'h30002173;
+        // 0x18: addi x4, x0, 77
+        memory[6] = 32'h04d00213;
 
-        // csrr x4, mepc
-        memory[65] = 32'h34102273;
+        // 0x1c: loop
+        memory[7] = 32'h0000006f;
 
-        // addi x4, x4, 4
-        memory[66] = 32'h00420213;
+        // Interrupt handler @ 0x100
 
-        // csrw mepc, x4
-        memory[67] = 32'h34121073;
+        // addi x10, x0, 1
+        memory[64] = 32'h00100513;
 
-        // mret
-        memory[68] = 32'h30200073;
+        // loop
+        memory[65] = 32'h0000006f;
     end
 
     assign instruction =

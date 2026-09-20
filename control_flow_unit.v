@@ -11,13 +11,14 @@ module control_flow_unit (
     input wire jump_reg,
     input wire [2:0] branch_type,
 
-    input wire trap,
+    input wire take_trap,
     input wire [31:0] mtvec,
 
     input wire is_mret,
     input wire [31:0] mepc,
 
     output wire [31:0] next_pc,
+    output wire [31:0] next_pc_no_trap,
     output wire [31:0] pc_plus_4,
 
     output wire [31:0] control_target,
@@ -90,17 +91,20 @@ module control_flow_unit (
         (jump || jump_reg || branch_taken)
         && control_target[1:0] != 2'b00;
 
+    assign next_pc_no_trap =
+        is_mret
+            ? mepc
+            : jump
+                ? jump_target
+                : jump_reg
+                    ? jalr_target
+                    : branch_taken
+                        ? branch_target
+                        : pc_plus_4;
+
     assign next_pc =
-        trap
+        take_trap
             ? mtvec
-            : is_mret
-                ? mepc
-                : jump
-                    ? jump_target
-                    : jump_reg
-                        ? jalr_target
-                        : branch_taken
-                            ? branch_target
-                            : pc_plus_4;
+            : next_pc_no_trap;
 
 endmodule

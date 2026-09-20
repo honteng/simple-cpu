@@ -21,6 +21,7 @@ module control_flow_unit_tb;
     reg  [31:0] mepc;
 
     wire [31:0] next_pc;
+    wire [31:0] next_pc_no_trap;
     wire [31:0] pc_plus_4;
     wire [31:0] control_target;
     wire        instruction_address_misaligned;
@@ -44,13 +45,14 @@ module control_flow_unit_tb;
         .jump_reg(jump_reg),
         .branch_type(branch_type),
 
-        .trap(trap),
+        .take_trap(trap),
         .mtvec(mtvec),
 
         .is_mret(is_mret),
         .mepc(mepc),
 
         .next_pc(next_pc),
+        .next_pc_no_trap(next_pc_no_trap),
         .pc_plus_4(pc_plus_4),
 
         .control_target(control_target),

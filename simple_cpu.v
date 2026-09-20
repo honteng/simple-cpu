@@ -1,9 +1,11 @@
 module simple_cpu (
     input wire clk,
-    input wire reset
+    input wire reset,
+    input wire external_irq
 );
 
     wire [31:0] mstatus;
+    wire [31:0] mie;
     wire [31:0] mtvec;
     wire [31:0] mepc;
     wire [31:0] mcause;
@@ -15,12 +17,17 @@ module simple_cpu (
 
     wire [31:0] pc;
     wire [31:0] next_pc;
+    wire [31:0] next_pc_no_trap;
     wire [31:0] instruction;
     wire is_mret;
     wire illegal_instruction;
     wire illegal_alu_instruction;
-    wire [31:0] trap_cause;
-    wire [31:0] trap_value;
+    wire [31:0] exception_cause;
+    wire [31:0] exception_value;
+    wire [31:0] interrupt_cause;
+    wire [31:0] final_trap_cause;
+    wire [31:0] final_trap_value;
+    wire [31:0] trap_pc;
 
     assign csr_addr =
         instruction[31:20];
@@ -61,7 +68,9 @@ module simple_cpu (
     wire store_access;
     wire load_misaligned;
     wire store_misaligned;
-    wire trap;
+    wire exception_trap;
+    wire take_interrupt;
+    wire take_trap;
     wire [1:0] mem_size;
     wire load_unsigned;
     wire alu_src_imm;
@@ -209,10 +218,38 @@ module simple_cpu (
         .memory_address(alu_result),
 
         .is_mret(is_mret),
-        .trap(trap),
-        .trap_cause(trap_cause),
-        .trap_value(trap_value)
+        .trap(exception_trap),
+        .trap_cause(exception_cause),
+        .trap_value(exception_value)
     );
+
+    interrupt_controller interrupt_ctl (
+        .external_irq(external_irq),
+        .mstatus(mstatus),
+        .mie(mie),
+        .exception_trap(exception_trap),
+        .take_interrupt(take_interrupt),
+        .interrupt_cause(interrupt_cause)
+    );
+
+    assign take_trap =
+        exception_trap ||
+        take_interrupt;
+
+    assign trap_pc =
+        exception_trap
+            ? pc
+            : next_pc_no_trap;
+
+    assign final_trap_cause =
+        exception_trap
+            ? exception_cause
+            : interrupt_cause;
+
+    assign final_trap_value =
+        exception_trap
+            ? exception_value
+            : 32'd0;
 
     control_flow_unit flow (
         .pc(pc),
@@ -227,13 +264,14 @@ module simple_cpu (
         .jump_reg(jump_reg),
         .branch_type(branch_type),
 
-        .trap(trap),
+        .take_trap(take_trap),
         .mtvec(mtvec),
 
         .is_mret(is_mret),
         .mepc(mepc),
 
         .next_pc(next_pc),
+        .next_pc_no_trap(next_pc_no_trap),
         .pc_plus_4(pc_plus_4),
 
         .control_target(control_target),
@@ -253,10 +291,10 @@ module simple_cpu (
     csr_file csr0 (
         .clk(clk),
         .reset(reset),
-        .trap(trap),
-        .trap_pc(pc),
-        .trap_cause(trap_cause),
-        .trap_value(trap_value),
+        .trap(take_trap),
+        .trap_pc(trap_pc),
+        .trap_cause(final_trap_cause),
+        .trap_value(final_trap_value),
         .is_mret(is_mret),
         .csr_addr(csr_addr),
         .csr_cmd(csr_cmd),
@@ -264,6 +302,7 @@ module simple_cpu (
         .csr_write_data(read_data1),
         .csr_read_data(csr_read_data),
         .mstatus(mstatus),
+        .mie(mie),
         .mtvec(mtvec),
         .mepc(mepc),
         .mcause(mcause),
@@ -271,10 +310,10 @@ module simple_cpu (
     );
 
     assign effective_reg_write =
-        reg_write && !trap;
+        reg_write && !exception_trap;
 
     assign effective_mem_write =
-        mem_write && !trap;
+        mem_write && !exception_trap;
 
     always @(*) begin
         case (imm_sel)
