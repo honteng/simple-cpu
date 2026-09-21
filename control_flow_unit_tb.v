@@ -2,29 +2,29 @@
 
 module control_flow_unit_tb;
 
-    reg  [31:0] pc;
-    reg  [31:0] immediate;
+    reg [31:0] pc;
+    reg [31:0] immediate;
 
-    reg  [31:0] read_data1;
-    reg  [31:0] read_data2;
-    reg  [31:0] alu_result;
+    reg [31:0] read_data1;
+    reg [31:0] read_data2;
+    reg [31:0] alu_result;
 
-    reg         branch;
-    reg         jump;
-    reg         jump_reg;
-    reg  [2:0]  branch_type;
+    reg branch;
+    reg jump;
+    reg jump_reg;
+    reg [2:0] branch_type;
 
-    reg         trap;
-    reg  [31:0] mtvec;
+    reg take_trap;
+    reg [31:0] mtvec;
 
-    reg         is_mret;
-    reg  [31:0] mepc;
+    reg is_mret;
+    reg [31:0] mepc;
 
     wire [31:0] next_pc;
     wire [31:0] next_pc_no_trap;
     wire [31:0] pc_plus_4;
     wire [31:0] control_target;
-    wire        instruction_address_misaligned;
+    wire instruction_address_misaligned;
 
     localparam BR_NONE = 3'b000;
     localparam BR_EQ   = 3'b001;
@@ -45,7 +45,7 @@ module control_flow_unit_tb;
         .jump_reg(jump_reg),
         .branch_type(branch_type),
 
-        .take_trap(trap),
+        .take_trap(take_trap),
         .mtvec(mtvec),
 
         .is_mret(is_mret),
@@ -61,122 +61,131 @@ module control_flow_unit_tb;
         )
     );
 
-    task reset_inputs;
+    task clear_inputs;
         begin
-            pc          = 32'h00000100;
-            immediate   = 32'd0;
+            pc = 32'h00000100;
+            immediate = 0;
 
-            read_data1  = 32'd0;
-            read_data2  = 32'd0;
-            alu_result  = 32'd0;
+            read_data1 = 0;
+            read_data2 = 0;
+            alu_result = 0;
 
-            branch      = 0;
-            jump        = 0;
-            jump_reg    = 0;
+            branch = 0;
+            jump = 0;
+            jump_reg = 0;
             branch_type = BR_NONE;
 
-            trap        = 0;
-            mtvec       = 32'h00000200;
+            take_trap = 0;
+            mtvec = 32'h00000400;
 
-            is_mret     = 0;
-            mepc        = 32'h00000300;
+            is_mret = 0;
+            mepc = 32'h00000300;
 
             #1;
         end
     endtask
 
     initial begin
+
         // ------------------------------------------------
-        // Normal execution: PC + 4
+        // Normal PC + 4
         // ------------------------------------------------
-        reset_inputs();
+        clear_inputs();
 
         if (pc_plus_4 !== 32'h00000104)
-            $fatal(1, "pc_plus_4 failed");
+            $fatal(1, "PC+4 failed");
+
+        if (next_pc_no_trap !== 32'h00000104)
+            $fatal(1, "Normal next PC failed");
 
         if (next_pc !== 32'h00000104)
-            $fatal(1, "normal next_pc failed");
+            $fatal(1, "Normal final PC failed");
 
 
         // ------------------------------------------------
         // BEQ taken
         // ------------------------------------------------
-        reset_inputs();
+        clear_inputs();
 
-        branch      = 1;
+        branch = 1;
         branch_type = BR_EQ;
-        read_data1  = 32'd10;
-        read_data2  = 32'd10;
-        immediate   = 32'd16;
+
+        read_data1 = 32'd10;
+        read_data2 = 32'd10;
+
+        immediate = 32'd16;
 
         #1;
 
-        if (next_pc !== 32'h00000110)
+        if (next_pc_no_trap !== 32'h00000110)
             $fatal(1, "BEQ taken failed");
 
 
         // ------------------------------------------------
         // BEQ not taken
         // ------------------------------------------------
-        reset_inputs();
+        clear_inputs();
 
-        branch      = 1;
+        branch = 1;
         branch_type = BR_EQ;
-        read_data1  = 32'd10;
-        read_data2  = 32'd20;
-        immediate   = 32'd16;
+
+        read_data1 = 10;
+        read_data2 = 20;
+
+        immediate = 16;
 
         #1;
 
-        if (next_pc !== 32'h00000104)
+        if (next_pc_no_trap !== 32'h00000104)
             $fatal(1, "BEQ not-taken failed");
 
 
         // ------------------------------------------------
-        // BLT must use signed comparison
+        // BLT signed comparison
         //
-        // -1 < 1 should be true
+        // -1 < 1
         // ------------------------------------------------
-        reset_inputs();
+        clear_inputs();
 
-        branch      = 1;
+        branch = 1;
         branch_type = BR_LT;
-        read_data1  = 32'hffffffff; // -1
-        read_data2  = 32'd1;
-        immediate   = 32'd8;
+
+        read_data1 = 32'hffffffff;
+        read_data2 = 32'd1;
+
+        immediate = 32'd8;
 
         #1;
 
-        if (next_pc !== 32'h00000108)
+        if (next_pc_no_trap !== 32'h00000108)
             $fatal(1, "BLT signed comparison failed");
 
 
         // ------------------------------------------------
         // JAL
         // ------------------------------------------------
-        reset_inputs();
+        clear_inputs();
 
-        jump      = 1;
-        immediate = 32'h00000020;
+        jump = 1;
+        immediate = 32'h20;
 
         #1;
 
         if (control_target !== 32'h00000120)
-            $fatal(1, "JAL target failed");
+            $fatal(1, "JAL control target failed");
 
-        if (next_pc !== 32'h00000120)
-            $fatal(1, "JAL next_pc failed");
+        if (next_pc_no_trap !== 32'h00000120)
+            $fatal(1, "JAL failed");
 
 
         // ------------------------------------------------
-        // JALR: bit 0 must be cleared
+        // JALR bit 0 clearing
         //
-        // alu_result = 0x105
-        // target     = 0x104
+        // 0x105 -> 0x104
         // ------------------------------------------------
-        reset_inputs();
+        clear_inputs();
 
-        jump_reg   = 1;
+        jump_reg = 1;
         alu_result = 32'h00000105;
 
         #1;
@@ -184,62 +193,75 @@ module control_flow_unit_tb;
         if (control_target !== 32'h00000104)
             $fatal(1, "JALR bit-0 clearing failed");
 
-        if (instruction_address_misaligned !== 0)
-            $fatal(1, "aligned JALR incorrectly marked misaligned");
+        if (instruction_address_misaligned)
+            $fatal(1, "Aligned JALR marked misaligned");
 
 
         // ------------------------------------------------
-        // JALR misaligned for IALIGN=32
+        // JALR misaligned
         //
-        // 0x103 -> bit0 clear -> 0x102
-        // 0x102 is not 4-byte aligned
+        // 0x103 -> 0x102
         // ------------------------------------------------
-        reset_inputs();
+        clear_inputs();
 
-        jump_reg   = 1;
+        jump_reg = 1;
         alu_result = 32'h00000103;
 
         #1;
 
         if (control_target !== 32'h00000102)
-            $fatal(1, "JALR target should be 0x102");
+            $fatal(1, "JALR target incorrect");
 
-        if (instruction_address_misaligned !== 1)
-            $fatal(1, "misaligned JALR not detected");
-
-
-        // ------------------------------------------------
-        // Trap has highest priority
-        // ------------------------------------------------
-        reset_inputs();
-
-        jump      = 1;
-        immediate = 32'h00000020;
-
-        trap  = 1;
-        mtvec = 32'h00000400;
-
-        #1;
-
-        if (next_pc !== 32'h00000400)
-            $fatal(1, "trap priority failed");
+        if (!instruction_address_misaligned)
+            $fatal(
+                1,
+                "Misaligned JALR not detected"
+            );
 
 
         // ------------------------------------------------
         // MRET
         // ------------------------------------------------
-        reset_inputs();
+        clear_inputs();
 
         is_mret = 1;
-        mepc    = 32'h00000300;
+        mepc = 32'h00000300;
 
         #1;
 
-        if (next_pc !== 32'h00000300)
+        if (next_pc_no_trap !== 32'h00000300)
             $fatal(1, "MRET failed");
 
 
-        $display("PASS: control_flow_unit");
+        // ------------------------------------------------
+        // Trap has highest priority
+        // ------------------------------------------------
+        clear_inputs();
+
+        jump = 1;
+        immediate = 32'h20;
+
+        take_trap = 1;
+        mtvec = 32'h00000400;
+
+        #1;
+
+        // Without trap, JAL wants 0x120.
+        if (next_pc_no_trap !== 32'h00000120)
+            $fatal(
+                1,
+                "next_pc_no_trap should preserve JAL target"
+            );
+
+        // But final PC must go to mtvec.
+        if (next_pc !== 32'h00000400)
+            $fatal(
+                1,
+                "Trap did not override control flow"
+            );
+
+
+        $display("PASS: control_flow_unit_tb");
         $finish;
     end
 
